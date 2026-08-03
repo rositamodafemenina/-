@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROSITA | Accesorios, Maquillaje y Moda - Brilla a tu manera</title>
+  <meta name="description" content="Rosita: Tienda de accesorios hechos a mano, bolsos, maquillaje y moda para Mujeres, Hombres y Niñas. Envíos directos a Galapa, Barranquilla y entregas en Guaimaral.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div>
+      ✨ <span>ROSITA:</span> Envíos a Galapa y Barranquilla • Pedidos 100% seguros vía WhatsApp <span>3147857503</span>
+    </div>
+    <button class="admin-login-btn-top" onclick="openAdminLoginModal()">
+      <i class="fa-solid fa-user-lock"></i> <span id="adminTopBtnText">Acceso Admin</span>
+    </button>
+  </div>
+
+  <!-- ADMIN ACTIVE TOP BAR PANEL -->
+  <div class="admin-bar" id="adminBar">
+    <div class="container">
+      <div class="admin-bar-content">
+        <div>
+          <span class="admin-badge"><i class="fa-solid fa-shield-halved"></i> MODO ADMIN ACTIVADO</span>
+          <span style="margin-left: 8px;">Admin Registrado: <strong>+57 322 635 6817</strong></span>
+        </div>
+        <div class="admin-bar-actions">
+          <button class="btn-admin-action" onclick="openAddProductModal()">
+            <i class="fa-solid fa-plus-circle"></i> Añadir Producto
+          </button>
+          <button class="btn-admin-action" onclick="openEditShippingModal()">
+            <i class="fa-solid fa-truck-gear"></i> Editar Envíos
+          </button>
+          <button class="btn-admin-action" style="background: #FF9800; color: #FFF;" onclick="resetCatalogToDefaults()">
+            <i class="fa-solid fa-rotate-left"></i> Restablecer Datos
+          </button>
+          <button class="btn-admin-logout" onclick="logoutAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="header">
+    <div class="container">
+      <div class="nav-content">
+        <a href="#" class="brand-logo">
+          <div class="logo-icon">
+            <i class="fa-solid fa-gem"></i>
+          </div>
+          <div>
+            <span class="logo-text brand-font">ROSITA</span>
+            <span class="logo-slogan">Brilla a tu manera</span>
+          </div>
+        </a>
+
+        <!-- Live Search -->
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Buscar accesorios..." oninput="handleSearch()">
+        </div>
+
+        <!-- Actions -->
+        <div class="nav-actions">
+          <button class="btn-icon" id="cartToggleBtn" onclick="toggleCartDrawer()">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span class="badge-count" id="cartBadge">0</span>
+          </button>
+          <a href="https://wa.me/573147857503" target="_blank" class="btn-whatsapp-gold" style="padding: 8px 18px; font-size: 0.85rem;">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>Contacto</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <div class="hero-tag">
+            <i class="fa-solid fa-sparkles"></i> Colección Hecha A Mano & Exclusiva
+          </div>
+          <h1 class="hero-title">ROSITA:<br><span>Brilla a tu manera</span></h1>
+          <p class="hero-desc">
+            Accesorios tejidos a mano, bolsos elegantes, maquillaje brillante y detalles especiales para toda la familia. Calidad y amor en cada detalle.
+          </p>
+          <div class="hero-btns">
+            <a href="#catalogo" class="btn-primary">
+              <i class="fa-solid fa-bag-shopping"></i> Ver Catálogo
+            </a>
+            <a href="https://wa.me/573147857503?text=%C2%A1Hola%20Rosita!%20Quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20tus%20productos." target="_blank" class="btn-whatsapp-gold">
+              <i class="fa-brands fa-whatsapp"></i> Chat WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-img-wrapper">
+          <div class="hero-img-card">
+            <img src="assets/hero.png" alt="Accesorios Rosita - Brilla a tu manera">
+          </div>
+          <!-- Floating Badges -->
+          <div class="floating-badge floating-badge-1">
+            <i class="fa-solid fa-heart"></i>
+            <div>
+              <h4>Empaque Especial</h4>
+              <p>"Ama lo que haces"</p>
+            </div>
+          </div>
+          <div class="floating-badge floating-badge-2">
+            <i class="fa-solid fa-truck-fast"></i>
+            <div>
+              <h4>Galapa & Barranquilla</h4>
+              <p>Entregas Rápidas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Bar -->
+  <section class="trust-section">
+    <div class="container">
+      <div class="trust-grid">
+        <div class="trust-card">
+          <div class="trust-icon">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+          </div>
+          <div class="trust-info">
+            <h4 id="trustZoneTitle">Envíos a Galapa y Barranquilla</h4>
+            <p id="trustZoneDesc">Entregas a domicilio y puntos en Guaimaral.</p>
+          </div>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-icon">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div class="trust-info">
+            <h4>Calidad a buen precio</h4>
+            <p>Materiales resistentes y finos acabados.</p>
+          </div>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-icon">
+            <i class="fa-solid fa-shield-heart"></i>
+          </div>
+          <div class="trust-info">
+            <h4>Pedidos 100% Seguros</h4>
+            <p>Atención personalizada directa por WhatsApp.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Categories -->
+  <section class="categories-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">Para Toda La Familia</span>
+        <h2 class="section-title">Categorías Destacadas</h2>
+      </div>
+
+      <div class="category-grid">
+        <div class="category-card" onclick="filterByCategory('mujeres')">
+          <img src="assets/leather_bag.png" alt="Categoría Mujeres Rosita">
+          <div class="category-overlay">
+            <h3>Mujeres</h3>
+            <p>Bolsos, Maquillaje, Prendas y Accesorios</p>
+            <span class="category-link">Explorar <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <div class="category-card" onclick="filterByCategory('hombres')">
+          <img src="assets/men_bracelet.png" alt="Categoría Hombres Rosita">
+          <div class="category-overlay">
+            <h3>Hombres</h3>
+            <p>Pulseras de cuero, detalles y accesorios</p>
+            <span class="category-link">Explorar <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <div class="category-card" onclick="filterByCategory('ninas')">
+          <img src="assets/girls_accessories.png" alt="Categoría Niñas Rosita">
+          <div class="category-overlay">
+            <h3>Niñas</h3>
+            <p>Accesorios de cabello, diademas y pulseras divertidas</p>
+            <span class="category-link">Explorar <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Best Sellers Highlight Section -->
+  <section class="products-section" style="background: var(--white);">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">Lo Más Deseado</span>
+        <h2 class="section-title">Productos Más Vendidos ⭐</h2>
+      </div>
+
+      <div class="product-grid" id="bestSellersGrid">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Full Catalog Section -->
+  <section class="products-section" id="catalogo">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">Encuentra Tu Estilo</span>
+        <h2 class="section-title">Catálogo de Productos</h2>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="filter-bar">
+        <div class="category-tabs">
+          <button class="tab-btn active" onclick="filterByCategory('todos', this)">Todos</button>
+          <button class="tab-btn" onclick="filterByCategory('mujeres', this)">Mujeres</button>
+          <button class="tab-btn" onclick="filterByCategory('hombres', this)">Hombres</button>
+          <button class="tab-btn" onclick="filterByCategory('ninas', this)">Niñas</button>
+        </div>
+
+        <div class="filter-group">
+          <!-- Subcategory Select -->
+          <select id="subcategorySelect" class="filter-select" onchange="applyFilters()">
+            <option value="todos">Todas las subcategorías</option>
+            <option value="accesorios">Accesorios Tejidos</option>
+            <option value="bolsos">Bolsos & Carteras</option>
+            <option value="maquillaje">Maquillaje</option>
+            <option value="prendas">Prendas de Vestir</option>
+            <option value="detalles">Detalles Regalo</option>
+          </select>
+
+          <!-- Price Filter -->
+          <div class="price-filter">
+            <span>Máx: </span>
+            <input type="range" id="priceRange" class="price-slider" min="10000" max="250000" step="5000" value="250000" oninput="updatePriceLabel(this.value)">
+            <span id="priceLabel">$250.000 COP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catalog Grid -->
+      <div class="product-grid" id="catalogGrid">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Shipping & FAQ Section -->
+  <section class="faq-section" id="envios">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">Resuelve Tus Dudas</span>
+        <h2 class="section-title">Zonas de Envío & Métodos de Pago</h2>
+      </div>
+
+      <div class="faq-grid">
+        <!-- Shipping Info Box -->
+        <div class="shipping-box">
+          <h3><i class="fa-solid fa-truck-dot" style="color: var(--primary-pink-dark);"></i> Dónde y Cómo Entregamos</h3>
+          <p style="font-size: 0.9rem; color: var(--dark-muted); margin-bottom: 20px;">
+            Hacemos que recibir tus accesorios sea fácil, rápido y seguro.
+          </p>
+
+          <div id="shippingZonesList">
+            <!-- Rendered dynamically by JavaScript -->
+          </div>
+
+          <!-- Payment Methods -->
+          <div class="payment-methods">
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Métodos de Pago Aceptados:</h4>
+            <div class="payment-tags">
+              <span class="payment-tag"><i class="fa-solid fa-mobile-screen-button" style="color: #6C1D94;"></i> Nequi</span>
+              <span class="payment-tag"><i class="fa-solid fa-wallet" style="color: #E20613;"></i> Daviplata</span>
+              <span class="payment-tag"><i class="fa-solid fa-building-columns"></i> Transferencia</span>
+              <span class="payment-tag"><i class="fa-solid fa-hand-holding-dollar" style="color: var(--rose-gold);"></i> Pago Contra Entrega</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion FAQ -->
+        <div class="faq-accordion">
+          <div class="faq-item open">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              <span>¿Cómo realizo un pedido en la tienda web?</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              Simplemente agrega tus accesorios o prendas favoritas al carrito, selecciona tu zona de domicilio (Guaimaral, Galapa o Barranquilla) y presiona "Finalizar Pedido por WhatsApp". Se abrirá automáticamente un chat en WhatsApp con tu pedido desglosado para coordinar la entrega.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              <span>¿Los accesorios vienen en empaque para regalo?</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              ¡Sí! Nuestras pulseras tejidas a mano y accesorios incluyen sus cartoncitos especiales con el mensaje de inspiración <strong>"Ama lo que haces"</strong>, listos para regalar o consentirte.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              <span>¿Cómo funciona el Pago Contra Entrega?</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              Para entregas en Galapa y Barranquilla, puedes pagar en efectivo o transferencia por Nequi/Daviplata justo cuando el domiciliario te entregue tu paquete en mano.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              <span>¿Puedo pedir productos en varios colores o tallas?</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+              ¡Por supuesto! Al hacer clic en cualquier producto, podrás seleccionar la variante de color deseada (Negro, Rojo, Rosa Viejo, Dorado, etc.) antes de agregarlo a tu carrito.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h2 class="brand-font">ROSITA</h2>
+          <p>Brilla a tu manera. Accesorios tejidos a mano, moda y maquillaje para toda la familia en Galapa y Barranquilla.</p>
+          <div class="social-links">
+            <a href="https://wa.me/573147857503" target="_blank" class="social-btn"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-btn"><i class="fa-brands fa-facebook-f"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navegación</h4>
+          <ul class="footer-links">
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#catalogo">Catálogo Completo</a></li>
+            <li><a href="#envios">Envíos & Pagos</a></li>
+            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()"><i class="fa-solid fa-lock"></i> Acceso Admin</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Categorías</h4>
+          <ul class="footer-links">
+            <li><a href="#catalogo" onclick="filterByCategory('mujeres')">Mujeres</a></li>
+            <li><a href="#catalogo" onclick="filterByCategory('hombres')">Hombres</a></li>
+            <li><a href="#catalogo" onclick="filterByCategory('ninas')">Niñas</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Contacto Admin</h4>
+          <ul class="footer-links">
+            <li><i class="fa-solid fa-phone" style="color: var(--rose-gold-light);"></i> +57 314 785 7503 (Ventas)</li>
+            <li><i class="fa-solid fa-user-shield" style="color: var(--rose-gold-light);"></i> +57 322 635 6817 (Admin)</li>
+            <li><i class="fa-solid fa-location-dot" style="color: var(--rose-gold-light);"></i> Galapa & Barranquilla, Colombia</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        &copy; 2026 ROSITA - Accesorios, Maquillaje y Moda. Todos los derechos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp Action Button -->
+  <a href="https://wa.me/573147857503?text=%C2%A1Hola%20Rosita!%20Quiero%20hacer%20una%20consulta%20sobre%20tus%20accesorios." target="_blank" class="floating-wa-btn" title="Contactar por WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <!-- Product Quick View Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeProductModal()"></div>
+  <div class="product-modal" id="productModal">
+    <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-body" id="modalBodyContent">
+      <!-- Dynamically filled by JS -->
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN MODAL (2-Step OTP via WhatsApp) -->
+  <div class="modal-overlay" id="adminLoginOverlay" onclick="closeAdminLoginModal()"></div>
+  <div class="product-modal" id="adminLoginModal" style="max-width: 460px;">
+    <button class="modal-close" onclick="closeAdminLoginModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="padding: 35px;" class="text-center">
+
+      <!-- Icon & Title -->
+      <div style="width: 68px; height: 68px; background: linear-gradient(135deg,#FDE8ED,#F5C2CE); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: var(--primary-pink-dark); font-size: 1.8rem; border: 2px solid var(--border-pink);">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h3 class="brand-font" style="font-size: 1.5rem; margin-bottom: 6px;">Acceso Administrador</h3>
+      <p style="font-size: 0.82rem; color: var(--dark-muted); margin-bottom: 25px; line-height:1.5;">
+        Por seguridad, se enviará un <strong>código de verificación</strong> al correo del administrador registrado.
+      </p>
+
+      <!-- STEP 1: Request Code -->
+      <div id="adminStep1">
+        <div style="background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 10px; padding: 14px; margin-bottom: 20px; display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-envelope" style="color:#2563EB; font-size:1.5rem;"></i>
+          <div style="text-align:left;">
+            <strong style="font-size:0.88rem;">Correo del Admin</strong><br>
+            <span style="font-size:0.82rem; color:var(--dark-muted);">rositamodafemenina@gmail.com</span>
+          </div>
+        </div>
+        <p style="font-size:0.82rem; color:var(--dark-muted); margin-bottom:18px;">
+          Al presionar el botón, se abrirá tu cliente de correo con el código. Cópialo y vuelve aquí para ingresar.
+        </p>
+        <button class="btn-primary" style="width:100%; justify-content:center; gap:10px;" onclick="sendAdminOTP()">
+          <i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo
+        </button>
+        <p style="font-size:0.75rem; color:#B595A5; margin-top:12px;">El código expira en 5 minutos.</p>
+      </div>
+
+      <!-- STEP 2: Enter OTP Code -->
+      <div id="adminStep2" style="display:none;">
+        <div style="background: var(--soft-pink); border-radius:10px; padding:16px; margin-bottom:20px; border:1px solid var(--border-pink);">
+          <i class="fa-solid fa-envelope-open-text" style="color:var(--primary-pink-dark); font-size:1.4rem; margin-bottom:6px; display:block;"></i>
+          <p style="font-size:0.85rem; color:var(--dark-muted);">Revisa tu correo <strong style="color:var(--dark-accent);">rositamodafemenina@gmail.com</strong> e ingresa el código de 6 dígitos recibido.</p>
+        </div>
+
+        <div class="form-group" style="text-align:left; margin-bottom:6px;">
+          <label for="adminOTPInput" style="margin-bottom:6px; display:block;">Código de Verificación:</label>
+          <input type="text"
+            id="adminOTPInput"
+            class="form-control"
+            placeholder="Ej: 482931"
+            maxlength="6"
+            style="text-align:center; font-size:1.6rem; font-weight:700; letter-spacing:8px; padding:14px;"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <p id="otpErrorMsg" style="color:#E53935; font-size:0.82rem; margin-bottom:12px; display:none;">
+          <i class="fa-solid fa-circle-exclamation"></i> Código incorrecto. Intenta de nuevo.
+        </p>
+        <p id="otpExpiredMsg" style="color:#E53935; font-size:0.82rem; margin-bottom:12px; display:none;">
+          <i class="fa-solid fa-clock"></i> El código expiró. Solicita uno nuevo.
+        </p>
+
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="verifyAdminOTP()">
+          <i class="fa-solid fa-unlock-keyhole"></i> Verificar y Acceder
+        </button>
+
+        <button onclick="backToStep1()" style="margin-top:12px; font-size:0.82rem; color:var(--rose-gold); font-weight:600; text-decoration:underline; display:block; margin-left:auto; margin-right:auto; background:none; border:none; cursor:pointer;">
+          ← Solicitar nuevo código
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADMIN ADD / EDIT PRODUCT MODAL -->
+  <div class="modal-overlay" id="adminProductOverlay" onclick="closeAdminProductModal()"></div>
+  <div class="product-modal" id="adminProductModal" style="max-width: 650px;">
+    <button class="modal-close" onclick="closeAdminProductModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="padding: 30px; max-height: 85vh; overflow-y: auto;">
+      <h3 class="brand-font" id="adminProductModalTitle" style="font-size: 1.6rem; margin-bottom: 20px;">Añadir Nuevo Producto</h3>
+      <form id="adminProductForm" onsubmit="handleSaveProduct(event)">
+        <input type="hidden" id="editProductId" value="">
+
+        <div class="form-group">
+          <label for="adminTitle">Título del Producto:</label>
+          <input type="text" id="adminTitle" class="form-control" placeholder="Ej: Pulsera Tejida con Dije de Corazón" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="adminCategory">Categoría Principal:</label>
+            <select id="adminCategory" class="form-control" required>
+              <option value="mujeres">Mujeres</option>
+              <option value="hombres">Hombres</option>
+              <option value="ninas">Niñas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="adminSubcategory">Subcategoría:</label>
+            <select id="adminSubcategory" class="form-control" required>
+              <option value="accesorios">Accesorios Tejidos</option>
+              <option value="bolsos">Bolsos & Carteras</option>
+              <option value="maquillaje">Maquillaje</option>
+              <option value="prendas">Prendas de Vestir</option>
+              <option value="detalles">Detalles Regalo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="adminPrice">Precio ($ COP):</label>
+            <input type="number" id="adminPrice" class="form-control" placeholder="18000" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="adminBadge">Insignia / Etiqueta:</label>
+            <input type="text" id="adminBadge" class="form-control" placeholder="Ej: ⭐ Más Vendido, Nuevo, Oferta">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="adminImage">URL de la Imagen (o ruta local / assets):</label>
+          <input type="text" id="adminImage" class="form-control" placeholder="assets/woven_bracelets.png" required>
+        </div>
+
+        <div class="form-group">
+          <label for="adminVariants">Variantes de Color (separadas por comas):</label>
+          <input type="text" id="adminVariants" class="form-control" placeholder="Rojo, Negro, Dorado, Rosa Viejo">
+        </div>
+
+        <div class="form-group">
+          <label for="adminDescription">Descripción Corta:</label>
+          <textarea id="adminDescription" class="form-control" rows="3" placeholder="Accesorio hecho a mano, material resistente..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="adminPackaging">Nota de Empaque (opcional):</label>
+          <input type="text" id="adminPackaging" class="form-control" placeholder="Ej: Incluye cartón especial 'Ama lo que haces'">
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+            <input type="checkbox" id="adminIsBestSeller">
+            <span>Marcar como <strong>Producto Más Vendido ⭐</strong></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 15px;">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Producto
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN EDIT SHIPPING RATES MODAL -->
+  <div class="modal-overlay" id="adminShippingOverlay" onclick="closeAdminShippingModal()"></div>
+  <div class="product-modal" id="adminShippingModal" style="max-width: 550px;">
+    <button class="modal-close" onclick="closeAdminShippingModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="padding: 30px;">
+      <h3 class="brand-font" style="font-size: 1.5rem; margin-bottom: 15px;"><i class="fa-solid fa-truck-fast"></i> Configurar Envíos y Tarifas</h3>
+      <p style="font-size: 0.85rem; color: var(--dark-muted); margin-bottom: 20px;">
+        Modifica los precios y descripciones de las zonas de domicilio para Galapa, Barranquilla y Guaimaral.
+      </p>
+
+      <form id="adminShippingForm" onsubmit="handleSaveShipping(event)">
+        <div style="background: var(--soft-pink); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 15px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px;">1. Guaimaral (Punto de Encuentro)</h4>
+          <div class="form-row">
+            <div class="form-group" style="margin:0;">
+              <label>Costo ($ COP):</label>
+              <input type="number" id="shipPriceGuaimaral" class="form-control" value="0" required>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Detalle / Nota:</label>
+              <input type="text" id="shipNoteGuaimaral" class="form-control" value="Entregas gratuitas en puntos acordados" required>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--soft-pink); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 15px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px;">2. Galapa (Domicilio a Puerta)</h4>
+          <div class="form-row">
+            <div class="form-group" style="margin:0;">
+              <label>Costo ($ COP):</label>
+              <input type="number" id="shipPriceGalapa" class="form-control" value="5000" required>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Detalle / Nota:</label>
+              <input type="text" id="shipNoteGalapa" class="form-control" value="Entrega directa en tu dirección en Galapa" required>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--soft-pink); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px;">3. Barranquilla (Domicilio a Puerta)</h4>
+          <div class="form-row">
+            <div class="form-group" style="margin:0;">
+              <label>Costo ($ COP):</label>
+              <input type="number" id="shipPriceBarranquilla" class="form-control" value="8000" required>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Detalle / Nota:</label>
+              <input type="text" id="shipNoteBarranquilla" class="form-control" value="Envíos diarios a cualquier barrio de Barranquilla" required>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Tarifas de Envío
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Drawer -->
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3><i class="fa-solid fa-bag-shopping" style="color: var(--primary-pink-dark);"></i> Mi Carrito ROSITA</h3>
+      <button class="btn-icon" onclick="toggleCartDrawer()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="cart-body" id="cartItemsContainer">
+      <!-- Dynamically rendered cart items -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="delivery-selector">
+        <label for="deliveryZoneSelect"><i class="fa-solid fa-location-dot" style="color: var(--rose-gold);"></i> Zona de Domicilio / Entrega:</label>
+        <select id="deliveryZoneSelect" class="delivery-select" onchange="updateCartTotals()">
+          <!-- Populated dynamically with configured rates -->
+        </select>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Subtotal Productos:</span>
+        <span id="cartSubtotal">$0 COP</span>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Costo de Envío:</span>
+        <span id="cartShipping">$0 COP</span>
+      </div>
+
+      <div class="cart-summary-row total">
+        <span>Total a Pagar:</span>
+        <span id="cartTotal">$0 COP</span>
+      </div>
+
+      <button class="btn-whatsapp-gold" style="width: 100%; justify-content: center; margin-top: 15px; padding: 14px;" onclick="checkoutViaWhatsApp()">
+        <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> Finalizar Pedido por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
