@@ -2,9 +2,6 @@
    ROSITA - Application Logic (Catalog, Filters, Admin Panel & WhatsApp)
    ========================================================================== */
 
-// Admin Email (receives OTP codes)
-const ADMIN_EMAIL = "rositamodafemenina@gmail.com";
-
 // OTP State
 let currentOTP = null;         // The generated code (string)
 let otpExpiry = null;          // Timestamp when OTP expires (5 min)
@@ -157,6 +154,9 @@ function formatCOP(amount) {
 
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize EmailJS with the Public Key
+  emailjs.init("6wn4STbb6fAn_tW-7");
+
   checkAdminStateUI();
   renderShippingZones();
   populateDeliverySelectOptions();
@@ -199,36 +199,58 @@ function closeAdminLoginModal() {
   document.getElementById("adminLoginModal").classList.remove("active");
 }
 
-// STEP 1: Generate OTP and open Email client
+// STEP 1: Generate OTP and send via EmailJS
 function sendAdminOTP() {
+  const btn = document.getElementById("btnSendOTP");
+  
   // Generate a secure random 6-digit code
   currentOTP = String(Math.floor(100000 + Math.random() * 900000));
   otpExpiry = Date.now() + OTP_VALIDITY_MS;
 
-  const subject = encodeURIComponent("🔐 ROSITA Admin - Código de Verificación");
-  const body = encodeURIComponent(
-    `ROSITA Admin - Código de Verificación\n\n` +
-    `Tu código de acceso al panel administrativo es:\n\n` +
-    `${currentOTP}\n\n` +
-    `Este código expira en 5 minutos. No lo compartas con nadie.`
-  );
-  const mailtoURL = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+  // Set button to loading state
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+  }
 
-  // Open default email client with the OTP message
-  window.open(mailtoURL, "_blank");
+  // Send email via EmailJS
+  const templateParams = {
+    otp_code: currentOTP
+  };
 
-  // Move to Step 2
-  document.getElementById("adminStep1").style.display = "none";
-  document.getElementById("adminStep2").style.display = "block";
-  document.getElementById("adminOTPInput").value = "";
-  document.getElementById("otpErrorMsg").style.display = "none";
-  document.getElementById("otpExpiredMsg").style.display = "none";
+  emailjs.send("service_9gs7z1s", "template_vxzgfgt", templateParams)
+    .then(() => {
+      // Success: Move to Step 2
+      document.getElementById("adminStep1").style.display = "none";
+      document.getElementById("adminStep2").style.display = "block";
+      document.getElementById("adminOTPInput").value = "";
+      document.getElementById("otpErrorMsg").style.display = "none";
+      document.getElementById("otpExpiredMsg").style.display = "none";
 
-  // Auto-focus the code input
-  setTimeout(() => {
-    const input = document.getElementById("adminOTPInput");
-    if (input) input.focus();
-  }, 400);
+      // Auto-focus the code input
+      setTimeout(() => {
+        const input = document.getElementById("adminOTPInput");
+        if (input) input.focus();
+      }, 400);
+
+      // Restore button state
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo`;
+      }
+    })
+    .catch((error) => {
+      console.error("Error al enviar el OTP:", error);
+      showToastNotification("Hubo un error al enviar el correo. Intenta de nuevo.");
+      currentOTP = null;
+      otpExpiry = null;
+      
+      // Restore button state
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo`;
+      }
+    });
 }
 
 // STEP 2: Validate entered OTP

@@ -14,6 +14,9 @@
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
+
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -434,9 +437,9 @@
           </div>
         </div>
         <p style="font-size:0.82rem; color:var(--dark-muted); margin-bottom:18px;">
-          Al presionar el botón, se abrirá tu cliente de correo con el código. Cópialo y vuelve aquí para ingresar.
+          Al presionar el botón, se enviará automáticamente un correo con tu código.
         </p>
-        <button class="btn-primary" style="width:100%; justify-content:center; gap:10px;" onclick="sendAdminOTP()">
+        <button id="btnSendOTP" class="btn-primary" style="width:100%; justify-content:center; gap:10px;" onclick="sendAdminOTP()">
           <i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo
         </button>
         <p style="font-size:0.75rem; color:#B595A5; margin-top:12px;">El código expira en 5 minutos.</p>
