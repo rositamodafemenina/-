@@ -17,6 +17,9 @@
 
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -36,7 +39,6 @@
       <div class="admin-bar-content">
         <div>
           <span class="admin-badge"><i class="fa-solid fa-shield-halved"></i> MODO ADMIN ACTIVADO</span>
-          <span style="margin-left: 8px;">Admin Registrado: <strong>+57 322 635 6817</strong></span>
         </div>
         <div class="admin-bar-actions">
           <button class="btn-admin-action" onclick="openAddProductModal()">
@@ -44,6 +46,9 @@
           </button>
           <button class="btn-admin-action" onclick="openEditShippingModal()">
             <i class="fa-solid fa-truck-gear"></i> Editar Envíos
+          </button>
+          <button class="btn-admin-action" style="background: #7C3AED; color: #FFF;" onclick="openSalesModal()">
+            <i class="fa-solid fa-chart-line"></i> Ver Ventas
           </button>
           <button class="btn-admin-action" style="background: #FF9800; color: #FFF;" onclick="resetCatalogToDefaults()">
             <i class="fa-solid fa-rotate-left"></i> Restablecer Datos
@@ -383,10 +388,9 @@
         </div>
 
         <div class="footer-col">
-          <h4>Contacto Admin</h4>
+          <h4>Contacto</h4>
           <ul class="footer-links">
             <li><i class="fa-solid fa-phone" style="color: var(--rose-gold-light);"></i> +57 314 785 7503 (Ventas)</li>
-            <li><i class="fa-solid fa-user-shield" style="color: var(--rose-gold-light);"></i> +57 322 635 6817 (Admin)</li>
             <li><i class="fa-solid fa-location-dot" style="color: var(--rose-gold-light);"></i> Galapa & Barranquilla, Colombia</li>
           </ul>
         </div>
@@ -528,8 +532,25 @@
         </div>
 
         <div class="form-group">
-          <label for="adminImage">URL de la Imagen (o ruta local / assets):</label>
-          <input type="text" id="adminImage" class="form-control" placeholder="assets/woven_bracelets.png" required>
+          <label>Imagen del Producto:</label>
+          <div class="image-upload-area">
+            <input type="file" id="adminImageFile" accept="image/*" onchange="handleImageFileSelect(event)" style="display:none;">
+            <div class="image-preview-box" id="imagePreviewContainer" style="display:none;">
+              <img id="imagePreview" src="" alt="Vista previa">
+              <button type="button" class="btn-remove-preview" onclick="removeSelectedImage()" title="Quitar imagen">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <button type="button" class="btn-select-image" onclick="document.getElementById('adminImageFile').click()">
+              <i class="fa-solid fa-camera-retro"></i>
+              <span>Seleccionar imagen del dispositivo</span>
+            </button>
+            <input type="hidden" id="adminImageData" value="">
+            <div style="margin-top: 10px;">
+              <span style="font-size: 0.78rem; color: var(--dark-muted);">O ingresa una URL manualmente:</span>
+              <input type="text" id="adminImage" class="form-control" placeholder="assets/nombre_imagen.png" style="margin-top: 5px; font-size: 0.85rem;">
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -618,6 +639,69 @@
           <i class="fa-solid fa-floppy-disk"></i> Guardar Tarifas de Envío
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- ADMIN SALES HISTORY MODAL -->
+  <div class="modal-overlay" id="salesOverlay" onclick="closeSalesModal()"></div>
+  <div class="product-modal sales-modal" id="salesModal" style="max-width: 900px;">
+    <button class="modal-close" onclick="closeSalesModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="padding: 30px; max-height: 85vh; overflow-y: auto;">
+      <h3 class="brand-font" style="font-size: 1.6rem; margin-bottom: 6px;">
+        <i class="fa-solid fa-chart-line" style="color: var(--primary-pink-dark);"></i> Historial de Ventas
+      </h3>
+      <p style="font-size: 0.85rem; color: var(--dark-muted); margin-bottom: 20px;">
+        Registro de todos los pedidos realizados desde la tienda web.
+      </p>
+
+      <!-- Stats Cards -->
+      <div class="sales-stats-grid" id="salesStatsGrid">
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-coins"></i>
+          <div>
+            <span class="stat-label">Total Vendido</span>
+            <span class="stat-value" id="statTotalVendido">$0 COP</span>
+          </div>
+        </div>
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-receipt"></i>
+          <div>
+            <span class="stat-label">N° de Pedidos</span>
+            <span class="stat-value" id="statTotalPedidos">0</span>
+          </div>
+        </div>
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <div>
+            <span class="stat-label">Productos Vendidos</span>
+            <span class="stat-value" id="statTotalProductos">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Table -->
+      <div class="sales-table-wrapper">
+        <table class="sales-table" id="salesTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Productos</th>
+              <th>Zona Envío</th>
+              <th>Subtotal</th>
+              <th>Envío</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="salesTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                Cargando ventas...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

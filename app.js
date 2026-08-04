@@ -7,6 +7,11 @@ let currentOTP = null;         // The generated code (string)
 let otpExpiry = null;          // Timestamp when OTP expires (5 min)
 const OTP_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
+// Supabase Configuration
+const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co/rest/v1/';  // Reemplaza con tu URL de Supabase
+const SUPABASE_ANON_KEY = 'sb_publishable_nl9TnJMNj5-O5t4yThW8fg_o-grIWgV';  // Reemplaza con tu clave pública anon
+let supabaseClient = null;
+
 // Default Product Catalog
 const defaultProductsData = [
   {
@@ -156,6 +161,14 @@ function formatCOP(amount) {
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize EmailJS with the Public Key
   emailjs.init("6wn4STbb6fAn_tW-7");
+
+  // Initialize Supabase Client
+  if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase conectado correctamente.');
+  } else {
+    console.warn('Supabase no configurado. Reemplaza las credenciales en app.js.');
+  }
 
   checkAdminStateUI();
   renderShippingZones();
@@ -461,6 +474,13 @@ function openAddProductModal() {
   document.getElementById("editProductId").value = "";
   document.getElementById("adminProductModalTitle").innerText = "Añadir Nuevo Producto";
   document.getElementById("adminProductForm").reset();
+  // Reset image upload preview
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  if (previewContainer) previewContainer.style.display = "none";
+  const imageDataInput = document.getElementById("adminImageData");
+  if (imageDataInput) imageDataInput.value = "";
+  const fileInput = document.getElementById("adminImageFile");
+  if (fileInput) fileInput.value = "";
   
   document.getElementById("adminProductOverlay").classList.add("active");
   document.getElementById("adminProductModal").classList.add("active");
@@ -480,7 +500,23 @@ function openEditProductModal(productId) {
   document.getElementById("adminSubcategory").value = p.subcategory;
   document.getElementById("adminPrice").value = p.price;
   document.getElementById("adminBadge").value = p.badge || "";
-  document.getElementById("adminImage").value = p.image;
+  // Show image preview for file-based images
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const previewImg = document.getElementById("imagePreview");
+  const imageDataInput = document.getElementById("adminImageData");
+  const fileInput = document.getElementById("adminImageFile");
+  if (fileInput) fileInput.value = "";
+
+  if (p.image && p.image.startsWith("data:")) {
+    if (previewImg) previewImg.src = p.image;
+    if (previewContainer) previewContainer.style.display = "flex";
+    if (imageDataInput) imageDataInput.value = p.image;
+    document.getElementById("adminImage").value = "";
+  } else {
+    if (previewContainer) previewContainer.style.display = "none";
+    if (imageDataInput) imageDataInput.value = "";
+    document.getElementById("adminImage").value = p.image;
+  }
   document.getElementById("adminVariants").value = (p.variants || []).join(", ");
   document.getElementById("adminDescription").value = p.description;
   document.getElementById("adminPackaging").value = p.packagingNote || "";
@@ -504,7 +540,9 @@ function handleSaveProduct(e) {
   const subcategory = document.getElementById("adminSubcategory").value;
   const price = parseFloat(document.getElementById("adminPrice").value) || 0;
   const badge = document.getElementById("adminBadge").value.trim();
-  const image = document.getElementById("adminImage").value.trim() || "assets/woven_bracelets.png";
+  const imageData = document.getElementById("adminImageData").value;
+  const imageUrl = document.getElementById("adminImage").value.trim();
+  const image = imageData || imageUrl || "assets/woven_bracelets.png";
   const variantsInput = document.getElementById("adminVariants").value.trim();
   const description = document.getElementById("adminDescription").value.trim();
   const packagingNote = document.getElementById("adminPackaging").value.trim();
@@ -912,6 +950,16 @@ function checkoutViaWhatsApp() {
   const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
 
   window.open(waUrl, "_blank");
+
+  // Record sale in Supabase
+  recordSale(cart, deliveryZoneName, shippingCost, subtotal, total);
+
+  // Clear cart after checkout
+  cart = [];
+  saveCart();
+  renderCart();
+  toggleCartDrawer();
+  showToastNotification("¡Pedido enviado! Tu venta ha sido registrada. 🌸");
 }
 
 function directBuyWhatsApp(productId) {
@@ -982,3 +1030,232 @@ function showToastNotification(message) {
     toast.style.opacity = "0";
   }, 2500);
 }
+
+// ============================================================
+// IMAGE FILE UPLOAD HANDLING
+// ============================================================
+
+function handleImageFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToastNotification("Por favor selecciona un archivo de imagen válido.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    compressImage(e.target.result, 800, 0.7, function(compressedBase64) {
+      const previewContainer = document.getElementById("imagePreviewContainer");
+      const previewImg = document.getElementById("imagePreview");
+      const imageDataInput = document.getElementById("adminImageData");
+
+      if (previewImg) previewImg.src = compressedBase64;
+      if (previewContainer) previewContainer.style.display = "flex";
+      if (imageDataInput) imageDataInput.value = compressedBase64;
+
+      // Clear URL input since file was selected
+      document.getElementById("adminImage").value = "";
+      showToastNotification("¡Imagen cargada correctamente! 📷");
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(base64Str, maxWidth, quality, callback) {
+  const img = new Image();
+  img.onload = function() {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const compressed = canvas.toDataURL("image/jpeg", quality);
+    callback(compressed);
+  };
+  img.src = base64Str;
+}
+
+function removeSelectedImage() {
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const previewImg = document.getElementById("imagePreview");
+  const imageDataInput = document.getElementById("adminImageData");
+  const fileInput = document.getElementById("adminImageFile");
+
+  if (previewContainer) previewContainer.style.display = "none";
+  if (previewImg) previewImg.src = "";
+  if (imageDataInput) imageDataInput.value = "";
+  if (fileInput) fileInput.value = "";
+}
+
+// ============================================================
+// SUPABASE SALES RECORDING & HISTORY
+// ============================================================
+
+async function recordSale(cartItems, zonaEnvio, costoEnvio, subtotal, total) {
+  if (!supabaseClient) {
+    console.warn("Supabase no configurado. La venta no se registró en la base de datos.");
+    return;
+  }
+
+  const productos = cartItems.map(item => ({
+    titulo: item.title,
+    variante: item.variant,
+    cantidad: item.quantity,
+    precio_unitario: item.price,
+    precio_total: item.price * item.quantity
+  }));
+
+  const { error } = await supabaseClient
+    .from('ventas')
+    .insert({
+      productos: productos,
+      zona_envio: zonaEnvio,
+      costo_envio: costoEnvio,
+      subtotal: subtotal,
+      total: total
+    });
+
+  if (error) {
+    console.error("Error al registrar venta en Supabase:", error);
+  } else {
+    console.log("Venta registrada exitosamente en Supabase.");
+  }
+}
+
+function openSalesModal() {
+  if (!isAdminLoggedIn) return;
+
+  document.getElementById("salesOverlay").classList.add("active");
+  document.getElementById("salesModal").classList.add("active");
+  loadSalesHistory();
+}
+
+function closeSalesModal() {
+  document.getElementById("salesOverlay").classList.remove("active");
+  document.getElementById("salesModal").classList.remove("active");
+}
+
+async function loadSalesHistory() {
+  const tbody = document.getElementById("salesTableBody");
+  const statTotal = document.getElementById("statTotalVendido");
+  const statPedidos = document.getElementById("statTotalPedidos");
+  const statProductos = document.getElementById("statTotalProductos");
+
+  if (!tbody) return;
+
+  if (!supabaseClient) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; color: #F59E0B; margin-bottom: 12px; display: block;"></i>
+          <strong style="font-size: 1rem;">Supabase no configurado</strong><br>
+          <span style="font-size: 0.82rem; line-height: 1.6;">Reemplaza <code>TU_SUPABASE_URL_AQUI</code> y <code>TU_SUPABASE_ANON_KEY_AQUI</code><br>en <strong>app.js</strong> con tus credenciales de Supabase.</span>
+        </td>
+      </tr>
+    `;
+    if (statTotal) statTotal.innerText = "$0 COP";
+    if (statPedidos) statPedidos.innerText = "0";
+    if (statProductos) statProductos.innerText = "0";
+    return;
+  }
+
+  // Loading state
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+        Cargando ventas...
+      </td>
+    </tr>
+  `;
+
+  const { data, error } = await supabaseClient
+    .from('ventas')
+    .select('*')
+    .order('fecha', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: #E53935;">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+          Error al cargar ventas: ${error.message}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+          <i class="fa-solid fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--border-pink);"></i>
+          <strong>No hay ventas registradas aún</strong><br>
+          <span style="font-size: 0.82rem;">Las ventas aparecerán aquí cuando los clientes hagan pedidos por WhatsApp.</span>
+        </td>
+      </tr>
+    `;
+    if (statTotal) statTotal.innerText = "$0 COP";
+    if (statPedidos) statPedidos.innerText = "0";
+    if (statProductos) statProductos.innerText = "0";
+    return;
+  }
+
+  // Calculate stats
+  let totalVendido = 0;
+  let totalProductos = 0;
+
+  data.forEach(venta => {
+    totalVendido += Number(venta.total) || 0;
+    if (Array.isArray(venta.productos)) {
+      venta.productos.forEach(p => {
+        totalProductos += p.cantidad || 0;
+      });
+    }
+  });
+
+  if (statTotal) statTotal.innerText = formatCOP(totalVendido);
+  if (statPedidos) statPedidos.innerText = data.length;
+  if (statProductos) statProductos.innerText = totalProductos;
+
+  // Render table rows
+  tbody.innerHTML = data.map(venta => {
+    const fecha = new Date(venta.fecha);
+    const fechaStr = fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    const horaStr = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+    let productosHTML = '';
+    if (Array.isArray(venta.productos)) {
+      productosHTML = venta.productos.map(p =>
+        `<div class="sale-product-item">${p.cantidad}x ${p.titulo} <small>(${p.variante})</small></div>`
+      ).join('');
+    }
+
+    return `
+      <tr>
+        <td>
+          <div class="sale-date">${fechaStr}</div>
+          <div class="sale-time">${horaStr}</div>
+        </td>
+        <td>${productosHTML}</td>
+        <td><span class="sale-zone-tag">${venta.zona_envio}</span></td>
+        <td>${formatCOP(venta.subtotal)}</td>
+        <td>${venta.costo_envio === 0 ? '<span style="color: #10B981; font-weight: 600;">GRATIS</span>' : formatCOP(venta.costo_envio)}</td>
+        <td><strong style="color: var(--primary-pink-dark);">${formatCOP(venta.total)}</strong></td>
+      </tr>
+    `;
+  }).join('');
+}
+
