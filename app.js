@@ -8,7 +8,7 @@ let otpExpiry = null;          // Timestamp when OTP expires (5 min)
 const OTP_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co/rest/v1/';  // Reemplaza con tu URL de Supabase
+const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co';  // Reemplaza con tu URL de Supabase
 const SUPABASE_ANON_KEY = 'sb_publishable_nl9TnJMNj5-O5t4yThW8fg_o-grIWgV';  // Reemplaza con tu clave pública anon
 let supabaseClient = null;
 
