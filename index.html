@@ -30,9 +30,6 @@
     <div>
       ✨ <span>ROSITA:</span> Envíos a Galapa y Barranquilla • Pedidos 100% seguros vía WhatsApp <span>3147857503</span>
     </div>
-    <button class="admin-login-btn-top" onclick="openAdminLoginModal()" id="topBarLoginBtn">
-      <i class="fa-brands fa-google"></i> <span id="adminTopBtnText">Iniciar Sesión Google</span>
-    </button>
   </div>
 
   <!-- ADMIN ACTIVE TOP BAR PANEL -->
@@ -67,7 +64,8 @@
   <header class="header">
     <div class="container">
       <div class="nav-content">
-        <a href="#" class="brand-logo">
+        <!-- Secret admin trigger: click logo 5 times quickly -->
+        <a href="#" class="brand-logo" id="brandLogoSecretTrigger" onclick="handleSecretLogoClick(event)" title="ROSITA - Brilla a tu manera">
           <div class="logo-icon">
             <i class="fa-solid fa-gem"></i>
           </div>
@@ -376,7 +374,6 @@
             <li><a href="#">Inicio</a></li>
             <li><a href="#catalogo">Catálogo Completo</a></li>
             <li><a href="#envios">Envíos & Pagos</a></li>
-            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()"><i class="fa-brands fa-google"></i> Iniciar Sesión Google</a></li>
           </ul>
         </div>
 
@@ -426,11 +423,11 @@
 
       <!-- Icon & Title -->
       <div style="width: 68px; height: 68px; background: linear-gradient(135deg,#FDE8ED,#F5C2CE); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: var(--primary-pink-dark); font-size: 1.8rem; border: 2px solid var(--border-pink);">
-        <i class="fa-solid fa-shield-halved"></i>
+        <i class="fa-solid fa-lock"></i>
       </div>
-      <h3 class="brand-font" style="font-size: 1.5rem; margin-bottom: 6px;">Acceso Administrador</h3>
+      <h3 class="brand-font" style="font-size: 1.5rem; margin-bottom: 6px;">Acceso Privado</h3>
       <p style="font-size: 0.82rem; color: var(--dark-muted); margin-bottom: 22px; line-height:1.5;">
-        Inicia sesión con tu cuenta de Google autorizada o ingresa la clave de administración.
+        Inicia sesión con tu cuenta de Google autorizada o ingresa la clave de acceso.
       </p>
 
       <!-- Google Sign-In SDK button container -->

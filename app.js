@@ -185,17 +185,38 @@ document.addEventListener("DOMContentLoaded", () => {
 // Admin Panel & Auth State Check
 function checkAdminStateUI() {
   const adminBar = document.getElementById("adminBar");
-  const topBtnText = document.getElementById("adminTopBtnText");
 
   if (isAdminLoggedIn) {
     if (adminBar) adminBar.classList.add("active");
-    if (topBtnText) topBtnText.innerText = "🛡️ Modo Admin";
   } else {
     if (adminBar) adminBar.classList.remove("active");
-    if (topBtnText) {
-      topBtnText.innerText = currentUserEmail ? "✓ Sesión Iniciada" : "Iniciar Sesión Google";
-    }
   }
+}
+
+// ============================================================
+// SECRET ADMIN TRIGGER (5 rapid clicks on the logo)
+// ============================================================
+let _secretClickCount = 0;
+let _secretClickTimer = null;
+
+function handleSecretLogoClick(e) {
+  // Don't prevent default so the logo still works as a normal link
+  _secretClickCount++;
+
+  // Clear the reset timer each click
+  if (_secretClickTimer) clearTimeout(_secretClickTimer);
+
+  if (_secretClickCount >= 5) {
+    _secretClickCount = 0;
+    e.preventDefault();
+    openAdminLoginModal();
+    return;
+  }
+
+  // Reset counter if no click happens within 2 seconds
+  _secretClickTimer = setTimeout(() => {
+    _secretClickCount = 0;
+  }, 2000);
 }
 
 // ============================================================
