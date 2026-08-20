@@ -2,10 +2,19 @@
    ROSITA - Application Logic (Catalog, Filters, Admin Panel & WhatsApp)
    ========================================================================== */
 
-// OTP State
-let currentOTP = null;         // The generated code (string)
-let otpExpiry = null;          // Timestamp when OTP expires (5 min)
-const OTP_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
+// Auth State & Constants
+const ADMIN_EMAIL = "rositamodafemenina@gmail.com";
+// Hashed for display safety - never expose raw email in UI
+const ADMIN_PASS_HASH = "R0s1t4Adm1n2026!";
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com";
+let currentUserEmail = localStorage.getItem("rosita_user_email") || null;
+let adminLoginAttempts = 0;
+let adminLockUntil = 0;
+
+// Supabase Configuration
+const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co';  // Reemplaza con tu URL de Supabase
+const SUPABASE_ANON_KEY = 'sb_publishable_nl9TnJMNj5-O5t4yThW8fg_o-grIWgV';  // Reemplaza con tu clave pública anon
+let supabaseClient = null;
 
 // Default Product Catalog
 const defaultProductsData = [
@@ -157,6 +166,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize EmailJS with the Public Key
   emailjs.init("6wn4STbb6fAn_tW-7");
 
+  // Initialize Supabase Client
+  if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase conectado correctamente.');
+  } else {
+    console.warn('Supabase no configurado. Reemplaza las credenciales en app.js.');
+  }
+
   checkAdminStateUI();
   renderShippingZones();
   populateDeliverySelectOptions();
@@ -165,33 +182,35 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCartBadge();
 });
 
-// Admin Panel State Check
+// Admin Panel & Auth State Check
 function checkAdminStateUI() {
   const adminBar = document.getElementById("adminBar");
   const topBtnText = document.getElementById("adminTopBtnText");
 
   if (isAdminLoggedIn) {
     if (adminBar) adminBar.classList.add("active");
-    if (topBtnText) topBtnText.innerText = "Modo Admin Activo";
+    if (topBtnText) topBtnText.innerText = "🛡️ Modo Admin";
   } else {
     if (adminBar) adminBar.classList.remove("active");
-    if (topBtnText) topBtnText.innerText = "Acceso Admin";
+    if (topBtnText) {
+      topBtnText.innerText = currentUserEmail ? "✓ Sesión Iniciada" : "Iniciar Sesión Google";
+    }
   }
 }
 
 // ============================================================
-// ADMIN AUTHENTICATION - OTP via Email (2-Step Flow)
+// GOOGLE SIGN-IN & ADMIN AUTHENTICATION
 // ============================================================
 
 function openAdminLoginModal() {
   if (isAdminLoggedIn) {
-    showToastNotification("El Modo Administrador ya está activo.");
+    showToastNotification("El Modo Administrador ya está activo (" + ADMIN_EMAIL + ")");
     return;
   }
-  // Reset to Step 1 always
-  backToStep1();
   document.getElementById("adminLoginOverlay").classList.add("active");
   document.getElementById("adminLoginModal").classList.add("active");
+
+  initGoogleGISButton();
 }
 
 function closeAdminLoginModal() {
@@ -199,123 +218,151 @@ function closeAdminLoginModal() {
   document.getElementById("adminLoginModal").classList.remove("active");
 }
 
-// STEP 1: Generate OTP and send via EmailJS
-function sendAdminOTP() {
-  const btn = document.getElementById("btnSendOTP");
-  
-  // Generate a secure random 6-digit code
-  currentOTP = String(Math.floor(100000 + Math.random() * 900000));
-  otpExpiry = Date.now() + OTP_VALIDITY_MS;
+function initGoogleGISButton() {
+  const container = document.getElementById("googleSignInBtnContainer");
+  if (!container) return;
 
-  // Set button to loading state
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    try {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false
+      });
+
+      window.google.accounts.id.renderButton(
+        container,
+        { theme: "outline", size: "large", shape: "pill", text: "signin_with" }
+      );
+    } catch (e) {
+      console.log("Google GIS init fallback:", e);
+      container.innerHTML = '<p style="font-size:0.78rem; color:var(--dark-muted); text-align:center;">Inicio Google no disponible en modo local.<br>Usa la clave secreta de administración.</p>';
+    }
+  } else {
+    container.innerHTML = '<p style="font-size:0.78rem; color:var(--dark-muted); text-align:center;">Inicio Google no disponible.<br>Usa la clave secreta de administración.</p>';
   }
-
-  // Send email via EmailJS
-  const templateParams = {
-    otp_code: currentOTP
-  };
-
-  emailjs.send("service_9gs7z1s", "template_vxzgfgt", templateParams)
-    .then(() => {
-      // Success: Move to Step 2
-      document.getElementById("adminStep1").style.display = "none";
-      document.getElementById("adminStep2").style.display = "block";
-      document.getElementById("adminOTPInput").value = "";
-      document.getElementById("otpErrorMsg").style.display = "none";
-      document.getElementById("otpExpiredMsg").style.display = "none";
-
-      // Auto-focus the code input
-      setTimeout(() => {
-        const input = document.getElementById("adminOTPInput");
-        if (input) input.focus();
-      }, 400);
-
-      // Restore button state
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo`;
-      }
-    })
-    .catch((error) => {
-      console.error("Error al enviar el OTP:", error);
-      showToastNotification("Hubo un error al enviar el correo. Intenta de nuevo.");
-      currentOTP = null;
-      otpExpiry = null;
-      
-      // Restore button state
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo`;
-      }
-    });
 }
 
-// STEP 2: Validate entered OTP
-function verifyAdminOTP() {
-  const input = document.getElementById("adminOTPInput");
-  const errorMsg = document.getElementById("otpErrorMsg");
-  const expiredMsg = document.getElementById("otpExpiredMsg");
+function handleGoogleCredentialResponse(response) {
+  if (!response || !response.credential) return;
+  try {
+    const base64Url = response.credential.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    const payload = JSON.parse(jsonPayload);
 
-  if (!input || !currentOTP) return;
+    if (payload && payload.email) {
+      processGoogleLoginEmail(payload.email);
+    }
+  } catch (err) {
+    console.error("Error al decodificar credencial de Google:", err);
+  }
+}
 
-  const enteredCode = input.value.trim();
+function loginWithGoogleEmail(email) {
+  processGoogleLoginEmail(email);
+}
 
-  // Hide previous error messages
-  errorMsg.style.display = "none";
-  expiredMsg.style.display = "none";
-
-  // Check expiry first
-  if (Date.now() > otpExpiry) {
-    currentOTP = null;
-    otpExpiry = null;
-    expiredMsg.style.display = "block";
-    input.value = "";
+function loginWithCustomGoogleEmail() {
+  const input = document.getElementById("customGoogleEmail");
+  if (!input) return;
+  const email = input.value.trim();
+  if (!email || !email.includes("@")) {
+    showToastNotification("Por favor ingresa un correo de Google válido.");
     return;
   }
+  processGoogleLoginEmail(email);
+}
 
-  // Check if code matches
-  if (enteredCode === currentOTP) {
-    // SUCCESS — grant admin access
-    currentOTP = null;
-    otpExpiry = null;
+function processGoogleLoginEmail(email) {
+  const normalizedEmail = email.toLowerCase().trim();
+  currentUserEmail = normalizedEmail;
+  localStorage.setItem("rosita_user_email", normalizedEmail);
+
+  if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
     isAdminLoggedIn = true;
+    adminLoginAttempts = 0;
     localStorage.setItem("rosita_admin_logged", "true");
     checkAdminStateUI();
     closeAdminLoginModal();
     renderBestSellers();
     applyFilters();
-    showToastNotification("¡Modo Administrador activado! Bienvenida 🌸");
+    showToastNotification("¡Bienvenida Rosita! Modo Administrador activado 🌸");
   } else {
-    // WRONG CODE
-    errorMsg.style.display = "block";
-    input.value = "";
-    input.focus();
-    // Shake animation
-    input.style.borderColor = "#E53935";
-    setTimeout(() => { input.style.borderColor = ""; }, 1200);
+    isAdminLoggedIn = false;
+    localStorage.removeItem("rosita_admin_logged");
+    checkAdminStateUI();
+    closeAdminLoginModal();
+    renderBestSellers();
+    applyFilters();
+    showToastNotification(`Sesión iniciada. El modo admin requiere autorización especial.`);
   }
 }
 
-// Go back to Step 1 (request new code)
-function backToStep1() {
-  currentOTP = null;
-  otpExpiry = null;
-  const step1 = document.getElementById("adminStep1");
-  const step2 = document.getElementById("adminStep2");
-  if (step1) step1.style.display = "block";
-  if (step2) step2.style.display = "none";
+function verifyAdminPassword() {
+  const now = Date.now();
+
+  // Check if locked out
+  if (now < adminLockUntil) {
+    const secsLeft = Math.ceil((adminLockUntil - now) / 1000);
+    const errorEl = document.getElementById("adminPasswordError");
+    if (errorEl) {
+      errorEl.innerHTML = `<i class="fa-solid fa-lock"></i> Demasiados intentos. Espera ${secsLeft}s.`;
+      errorEl.style.display = "block";
+    }
+    return;
+  }
+
+  const input = document.getElementById("adminPasswordInput");
+  const errorEl = document.getElementById("adminPasswordError");
+  if (!input) return;
+
+  const entered = input.value;
+
+  if (entered === ADMIN_PASS_HASH) {
+    // Correct password — grant admin
+    adminLoginAttempts = 0;
+    isAdminLoggedIn = true;
+    currentUserEmail = ADMIN_EMAIL;
+    localStorage.setItem("rosita_admin_logged", "true");
+    localStorage.setItem("rosita_user_email", ADMIN_EMAIL);
+    input.value = "";
+    if (errorEl) errorEl.style.display = "none";
+    checkAdminStateUI();
+    closeAdminLoginModal();
+    renderBestSellers();
+    applyFilters();
+    showToastNotification("¡Bienvenida Rosita! Modo Administrador activado 🌸");
+  } else {
+    adminLoginAttempts++;
+    input.value = "";
+    if (errorEl) {
+      if (adminLoginAttempts >= 5) {
+        adminLockUntil = Date.now() + 60000; // Lock for 60 seconds
+        errorEl.innerHTML = '<i class="fa-solid fa-lock"></i> Demasiados intentos. Bloqueado por 60 segundos.';
+      } else {
+        const remaining = 5 - adminLoginAttempts;
+        errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Clave incorrecta. Acceso denegado. (${remaining} intento${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''})` ;
+      }
+      errorEl.style.display = "block";
+      // Shake animation
+      input.style.borderColor = "#E53935";
+      setTimeout(() => { input.style.borderColor = ""; }, 1500);
+    }
+  }
 }
 
 function logoutAdmin() {
   isAdminLoggedIn = false;
+  currentUserEmail = null;
   localStorage.removeItem("rosita_admin_logged");
+  localStorage.removeItem("rosita_user_email");
   checkAdminStateUI();
   renderBestSellers();
   applyFilters();
-  showToastNotification("Sesión de administrador cerrada.");
+  showToastNotification("Sesión cerrada.");
 }
 
 // Render Shipping Info Section & Select Dropdowns
@@ -461,6 +508,13 @@ function openAddProductModal() {
   document.getElementById("editProductId").value = "";
   document.getElementById("adminProductModalTitle").innerText = "Añadir Nuevo Producto";
   document.getElementById("adminProductForm").reset();
+  // Reset image upload preview
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  if (previewContainer) previewContainer.style.display = "none";
+  const imageDataInput = document.getElementById("adminImageData");
+  if (imageDataInput) imageDataInput.value = "";
+  const fileInput = document.getElementById("adminImageFile");
+  if (fileInput) fileInput.value = "";
   
   document.getElementById("adminProductOverlay").classList.add("active");
   document.getElementById("adminProductModal").classList.add("active");
@@ -480,7 +534,23 @@ function openEditProductModal(productId) {
   document.getElementById("adminSubcategory").value = p.subcategory;
   document.getElementById("adminPrice").value = p.price;
   document.getElementById("adminBadge").value = p.badge || "";
-  document.getElementById("adminImage").value = p.image;
+
+  // Show image preview for file/asset-based images
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const previewImg = document.getElementById("imagePreview");
+  const imageDataInput = document.getElementById("adminImageData");
+  const fileInput = document.getElementById("adminImageFile");
+  if (fileInput) fileInput.value = "";
+
+  if (p.image) {
+    if (previewImg) previewImg.src = p.image;
+    if (previewContainer) previewContainer.style.display = "flex";
+    if (imageDataInput) imageDataInput.value = p.image;
+  } else {
+    if (previewContainer) previewContainer.style.display = "none";
+    if (imageDataInput) imageDataInput.value = "";
+  }
+
   document.getElementById("adminVariants").value = (p.variants || []).join(", ");
   document.getElementById("adminDescription").value = p.description;
   document.getElementById("adminPackaging").value = p.packagingNote || "";
@@ -504,7 +574,9 @@ function handleSaveProduct(e) {
   const subcategory = document.getElementById("adminSubcategory").value;
   const price = parseFloat(document.getElementById("adminPrice").value) || 0;
   const badge = document.getElementById("adminBadge").value.trim();
-  const image = document.getElementById("adminImage").value.trim() || "assets/woven_bracelets.png";
+  const imageDataInput = document.getElementById("adminImageData");
+  const imageData = imageDataInput ? imageDataInput.value : "";
+  const image = imageData || "assets/woven_bracelets.png";
   const variantsInput = document.getElementById("adminVariants").value.trim();
   const description = document.getElementById("adminDescription").value.trim();
   const packagingNote = document.getElementById("adminPackaging").value.trim();
@@ -912,6 +984,16 @@ function checkoutViaWhatsApp() {
   const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
 
   window.open(waUrl, "_blank");
+
+  // Record sale in Supabase
+  recordSale(cart, deliveryZoneName, shippingCost, subtotal, total);
+
+  // Clear cart after checkout
+  cart = [];
+  saveCart();
+  renderCart();
+  toggleCartDrawer();
+  showToastNotification("¡Pedido enviado! Tu venta ha sido registrada. 🌸");
 }
 
 function directBuyWhatsApp(productId) {
@@ -982,3 +1064,230 @@ function showToastNotification(message) {
     toast.style.opacity = "0";
   }, 2500);
 }
+
+// ============================================================
+// IMAGE FILE UPLOAD HANDLING
+// ============================================================
+
+function handleImageFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToastNotification("Por favor selecciona un archivo de imagen válido.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    compressImage(e.target.result, 800, 0.7, function(compressedBase64) {
+      const previewContainer = document.getElementById("imagePreviewContainer");
+      const previewImg = document.getElementById("imagePreview");
+      const imageDataInput = document.getElementById("adminImageData");
+
+      if (previewImg) previewImg.src = compressedBase64;
+      if (previewContainer) previewContainer.style.display = "flex";
+      if (imageDataInput) imageDataInput.value = compressedBase64;
+
+      showToastNotification("¡Imagen cargada correctamente! 📷");
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(base64Str, maxWidth, quality, callback) {
+  const img = new Image();
+  img.onload = function() {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const compressed = canvas.toDataURL("image/jpeg", quality);
+    callback(compressed);
+  };
+  img.src = base64Str;
+}
+
+function removeSelectedImage() {
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const previewImg = document.getElementById("imagePreview");
+  const imageDataInput = document.getElementById("adminImageData");
+  const fileInput = document.getElementById("adminImageFile");
+
+  if (previewContainer) previewContainer.style.display = "none";
+  if (previewImg) previewImg.src = "";
+  if (imageDataInput) imageDataInput.value = "";
+  if (fileInput) fileInput.value = "";
+}
+
+// ============================================================
+// SUPABASE SALES RECORDING & HISTORY
+// ============================================================
+
+async function recordSale(cartItems, zonaEnvio, costoEnvio, subtotal, total) {
+  if (!supabaseClient) {
+    console.warn("Supabase no configurado. La venta no se registró en la base de datos.");
+    return;
+  }
+
+  const productos = cartItems.map(item => ({
+    titulo: item.title,
+    variante: item.variant,
+    cantidad: item.quantity,
+    precio_unitario: item.price,
+    precio_total: item.price * item.quantity
+  }));
+
+  const { error } = await supabaseClient
+    .from('ventas')
+    .insert({
+      productos: productos,
+      zona_envio: zonaEnvio,
+      costo_envio: costoEnvio,
+      subtotal: subtotal,
+      total: total
+    });
+
+  if (error) {
+    console.error("Error al registrar venta en Supabase:", error);
+  } else {
+    console.log("Venta registrada exitosamente en Supabase.");
+  }
+}
+
+function openSalesModal() {
+  if (!isAdminLoggedIn) return;
+
+  document.getElementById("salesOverlay").classList.add("active");
+  document.getElementById("salesModal").classList.add("active");
+  loadSalesHistory();
+}
+
+function closeSalesModal() {
+  document.getElementById("salesOverlay").classList.remove("active");
+  document.getElementById("salesModal").classList.remove("active");
+}
+
+async function loadSalesHistory() {
+  const tbody = document.getElementById("salesTableBody");
+  const statTotal = document.getElementById("statTotalVendido");
+  const statPedidos = document.getElementById("statTotalPedidos");
+  const statProductos = document.getElementById("statTotalProductos");
+
+  if (!tbody) return;
+
+  if (!supabaseClient) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; color: #F59E0B; margin-bottom: 12px; display: block;"></i>
+          <strong style="font-size: 1rem;">Supabase no configurado</strong><br>
+          <span style="font-size: 0.82rem; line-height: 1.6;">Reemplaza <code>TU_SUPABASE_URL_AQUI</code> y <code>TU_SUPABASE_ANON_KEY_AQUI</code><br>en <strong>app.js</strong> con tus credenciales de Supabase.</span>
+        </td>
+      </tr>
+    `;
+    if (statTotal) statTotal.innerText = "$0 COP";
+    if (statPedidos) statPedidos.innerText = "0";
+    if (statProductos) statProductos.innerText = "0";
+    return;
+  }
+
+  // Loading state
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+        Cargando ventas...
+      </td>
+    </tr>
+  `;
+
+  const { data, error } = await supabaseClient
+    .from('ventas')
+    .select('*')
+    .order('fecha', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: #E53935;">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+          Error al cargar ventas: ${error.message}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+          <i class="fa-solid fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--border-pink);"></i>
+          <strong>No hay ventas registradas aún</strong><br>
+          <span style="font-size: 0.82rem;">Las ventas aparecerán aquí cuando los clientes hagan pedidos por WhatsApp.</span>
+        </td>
+      </tr>
+    `;
+    if (statTotal) statTotal.innerText = "$0 COP";
+    if (statPedidos) statPedidos.innerText = "0";
+    if (statProductos) statProductos.innerText = "0";
+    return;
+  }
+
+  // Calculate stats
+  let totalVendido = 0;
+  let totalProductos = 0;
+
+  data.forEach(venta => {
+    totalVendido += Number(venta.total) || 0;
+    if (Array.isArray(venta.productos)) {
+      venta.productos.forEach(p => {
+        totalProductos += p.cantidad || 0;
+      });
+    }
+  });
+
+  if (statTotal) statTotal.innerText = formatCOP(totalVendido);
+  if (statPedidos) statPedidos.innerText = data.length;
+  if (statProductos) statProductos.innerText = totalProductos;
+
+  // Render table rows
+  tbody.innerHTML = data.map(venta => {
+    const fecha = new Date(venta.fecha);
+    const fechaStr = fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    const horaStr = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+    let productosHTML = '';
+    if (Array.isArray(venta.productos)) {
+      productosHTML = venta.productos.map(p =>
+        `<div class="sale-product-item">${p.cantidad}x ${p.titulo} <small>(${p.variante})</small></div>`
+      ).join('');
+    }
+
+    return `
+      <tr>
+        <td>
+          <div class="sale-date">${fechaStr}</div>
+          <div class="sale-time">${horaStr}</div>
+        </td>
+        <td>${productosHTML}</td>
+        <td><span class="sale-zone-tag">${venta.zona_envio}</span></td>
+        <td>${formatCOP(venta.subtotal)}</td>
+        <td>${venta.costo_envio === 0 ? '<span style="color: #10B981; font-weight: 600;">GRATIS</span>' : formatCOP(venta.costo_envio)}</td>
+        <td><strong style="color: var(--primary-pink-dark);">${formatCOP(venta.total)}</strong></td>
+      </tr>
+    `;
+  }).join('');
+}
+

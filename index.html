@@ -17,6 +17,11 @@
 
   <!-- EmailJS SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -25,8 +30,8 @@
     <div>
       ✨ <span>ROSITA:</span> Envíos a Galapa y Barranquilla • Pedidos 100% seguros vía WhatsApp <span>3147857503</span>
     </div>
-    <button class="admin-login-btn-top" onclick="openAdminLoginModal()">
-      <i class="fa-solid fa-user-lock"></i> <span id="adminTopBtnText">Acceso Admin</span>
+    <button class="admin-login-btn-top" onclick="openAdminLoginModal()" id="topBarLoginBtn">
+      <i class="fa-brands fa-google"></i> <span id="adminTopBtnText">Iniciar Sesión Google</span>
     </button>
   </div>
 
@@ -36,7 +41,6 @@
       <div class="admin-bar-content">
         <div>
           <span class="admin-badge"><i class="fa-solid fa-shield-halved"></i> MODO ADMIN ACTIVADO</span>
-          <span style="margin-left: 8px;">Admin Registrado: <strong>+57 322 635 6817</strong></span>
         </div>
         <div class="admin-bar-actions">
           <button class="btn-admin-action" onclick="openAddProductModal()">
@@ -44,6 +48,9 @@
           </button>
           <button class="btn-admin-action" onclick="openEditShippingModal()">
             <i class="fa-solid fa-truck-gear"></i> Editar Envíos
+          </button>
+          <button class="btn-admin-action" style="background: #7C3AED; color: #FFF;" onclick="openSalesModal()">
+            <i class="fa-solid fa-chart-line"></i> Ver Ventas
           </button>
           <button class="btn-admin-action" style="background: #FF9800; color: #FFF;" onclick="resetCatalogToDefaults()">
             <i class="fa-solid fa-rotate-left"></i> Restablecer Datos
@@ -369,7 +376,7 @@
             <li><a href="#">Inicio</a></li>
             <li><a href="#catalogo">Catálogo Completo</a></li>
             <li><a href="#envios">Envíos & Pagos</a></li>
-            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()"><i class="fa-solid fa-lock"></i> Acceso Admin</a></li>
+            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()"><i class="fa-brands fa-google"></i> Iniciar Sesión Google</a></li>
           </ul>
         </div>
 
@@ -383,10 +390,9 @@
         </div>
 
         <div class="footer-col">
-          <h4>Contacto Admin</h4>
+          <h4>Contacto</h4>
           <ul class="footer-links">
             <li><i class="fa-solid fa-phone" style="color: var(--rose-gold-light);"></i> +57 314 785 7503 (Ventas)</li>
-            <li><i class="fa-solid fa-user-shield" style="color: var(--rose-gold-light);"></i> +57 322 635 6817 (Admin)</li>
             <li><i class="fa-solid fa-location-dot" style="color: var(--rose-gold-light);"></i> Galapa & Barranquilla, Colombia</li>
           </ul>
         </div>
@@ -412,7 +418,7 @@
     </div>
   </div>
 
-  <!-- ADMIN LOGIN MODAL (2-Step OTP via WhatsApp) -->
+  <!-- GOOGLE LOGIN & SECURE ADMIN AUTH MODAL -->
   <div class="modal-overlay" id="adminLoginOverlay" onclick="closeAdminLoginModal()"></div>
   <div class="product-modal" id="adminLoginModal" style="max-width: 460px;">
     <button class="modal-close" onclick="closeAdminLoginModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -423,59 +429,33 @@
         <i class="fa-solid fa-shield-halved"></i>
       </div>
       <h3 class="brand-font" style="font-size: 1.5rem; margin-bottom: 6px;">Acceso Administrador</h3>
-      <p style="font-size: 0.82rem; color: var(--dark-muted); margin-bottom: 25px; line-height:1.5;">
-        Por seguridad, se enviará un <strong>código de verificación</strong> al correo del administrador registrado.
+      <p style="font-size: 0.82rem; color: var(--dark-muted); margin-bottom: 22px; line-height:1.5;">
+        Inicia sesión con tu cuenta de Google autorizada o ingresa la clave de administración.
       </p>
 
-      <!-- STEP 1: Request Code -->
-      <div id="adminStep1">
-        <div style="background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 10px; padding: 14px; margin-bottom: 20px; display:flex; align-items:center; gap:10px;">
-          <i class="fa-solid fa-envelope" style="color:#2563EB; font-size:1.5rem;"></i>
-          <div style="text-align:left;">
-            <strong style="font-size:0.88rem;">Correo del Admin</strong><br>
-            <span style="font-size:0.82rem; color:var(--dark-muted);">rositamodafemenina@gmail.com</span>
-          </div>
-        </div>
-        <p style="font-size:0.82rem; color:var(--dark-muted); margin-bottom:18px;">
-          Al presionar el botón, se enviará automáticamente un correo con tu código.
-        </p>
-        <button id="btnSendOTP" class="btn-primary" style="width:100%; justify-content:center; gap:10px;" onclick="sendAdminOTP()">
-          <i class="fa-solid fa-paper-plane" style="font-size:1.1rem;"></i> Enviar Código por Correo
-        </button>
-        <p style="font-size:0.75rem; color:#B595A5; margin-top:12px;">El código expira en 5 minutos.</p>
+      <!-- Google Sign-In SDK button container -->
+      <div id="googleSignInBtnContainer" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+
+      <div style="display:flex; align-items:center; margin: 15px 0; color: #B595A5; font-size: 0.75rem;">
+        <div style="flex:1; height:1px; background:#F5D3DD;"></div>
+        <span style="padding: 0 10px; font-weight:600;">O CON CLAVE SECRETA</span>
+        <div style="flex:1; height:1px; background:#F5D3DD;"></div>
       </div>
 
-      <!-- STEP 2: Enter OTP Code -->
-      <div id="adminStep2" style="display:none;">
-        <div style="background: var(--soft-pink); border-radius:10px; padding:16px; margin-bottom:20px; border:1px solid var(--border-pink);">
-          <i class="fa-solid fa-envelope-open-text" style="color:var(--primary-pink-dark); font-size:1.4rem; margin-bottom:6px; display:block;"></i>
-          <p style="font-size:0.85rem; color:var(--dark-muted);">Revisa tu correo <strong style="color:var(--dark-accent);">rositamodafemenina@gmail.com</strong> e ingresa el código de 6 dígitos recibido.</p>
+      <!-- Secure Admin Password Option -->
+      <div style="background: #FDF2F5; border: 1px solid var(--border-pink); border-radius: 12px; padding: 18px;">
+        <div style="text-align:left;">
+          <label for="adminPasswordInput" style="font-size:0.78rem; color:var(--dark-muted); display:block; margin-bottom:6px; font-weight:600;">Clave de Administrador:</label>
+          <div style="display:flex; gap:8px;">
+            <input type="password" id="adminPasswordInput" class="form-control" placeholder="••••••••" style="font-size:0.9rem; padding:9px 12px;" onkeydown="if(event.key==='Enter') verifyAdminPassword()">
+            <button type="button" onclick="verifyAdminPassword()" class="btn-primary" style="padding:9px 16px; font-size:0.82rem; white-space:nowrap;">
+              <i class="fa-solid fa-key"></i> Entrar
+            </button>
+          </div>
+          <p id="adminPasswordError" style="color:#E53935; font-size:0.78rem; margin-top:8px; display:none; font-weight:600;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Clave incorrecta. Acceso denegado.
+          </p>
         </div>
-
-        <div class="form-group" style="text-align:left; margin-bottom:6px;">
-          <label for="adminOTPInput" style="margin-bottom:6px; display:block;">Código de Verificación:</label>
-          <input type="text"
-            id="adminOTPInput"
-            class="form-control"
-            placeholder="Ej: 482931"
-            maxlength="6"
-            style="text-align:center; font-size:1.6rem; font-weight:700; letter-spacing:8px; padding:14px;"
-            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-        </div>
-        <p id="otpErrorMsg" style="color:#E53935; font-size:0.82rem; margin-bottom:12px; display:none;">
-          <i class="fa-solid fa-circle-exclamation"></i> Código incorrecto. Intenta de nuevo.
-        </p>
-        <p id="otpExpiredMsg" style="color:#E53935; font-size:0.82rem; margin-bottom:12px; display:none;">
-          <i class="fa-solid fa-clock"></i> El código expiró. Solicita uno nuevo.
-        </p>
-
-        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="verifyAdminOTP()">
-          <i class="fa-solid fa-unlock-keyhole"></i> Verificar y Acceder
-        </button>
-
-        <button onclick="backToStep1()" style="margin-top:12px; font-size:0.82rem; color:var(--rose-gold); font-weight:600; text-decoration:underline; display:block; margin-left:auto; margin-right:auto; background:none; border:none; cursor:pointer;">
-          ← Solicitar nuevo código
-        </button>
       </div>
 
     </div>
@@ -528,8 +508,21 @@
         </div>
 
         <div class="form-group">
-          <label for="adminImage">URL de la Imagen (o ruta local / assets):</label>
-          <input type="text" id="adminImage" class="form-control" placeholder="assets/woven_bracelets.png" required>
+          <label>Imagen del Producto:</label>
+          <div class="image-upload-area">
+            <input type="file" id="adminImageFile" accept="image/*" onchange="handleImageFileSelect(event)" style="display:none;">
+            <div class="image-preview-box" id="imagePreviewContainer" style="display:none;">
+              <img id="imagePreview" src="" alt="Vista previa">
+              <button type="button" class="btn-remove-preview" onclick="removeSelectedImage()" title="Quitar imagen">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <button type="button" class="btn-select-image" onclick="document.getElementById('adminImageFile').click()">
+              <i class="fa-solid fa-camera-retro"></i>
+              <span>Seleccionar imagen del dispositivo</span>
+            </button>
+            <input type="hidden" id="adminImageData" value="">
+          </div>
         </div>
 
         <div class="form-group">
@@ -618,6 +611,69 @@
           <i class="fa-solid fa-floppy-disk"></i> Guardar Tarifas de Envío
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- ADMIN SALES HISTORY MODAL -->
+  <div class="modal-overlay" id="salesOverlay" onclick="closeSalesModal()"></div>
+  <div class="product-modal sales-modal" id="salesModal" style="max-width: 900px;">
+    <button class="modal-close" onclick="closeSalesModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div style="padding: 30px; max-height: 85vh; overflow-y: auto;">
+      <h3 class="brand-font" style="font-size: 1.6rem; margin-bottom: 6px;">
+        <i class="fa-solid fa-chart-line" style="color: var(--primary-pink-dark);"></i> Historial de Ventas
+      </h3>
+      <p style="font-size: 0.85rem; color: var(--dark-muted); margin-bottom: 20px;">
+        Registro de todos los pedidos realizados desde la tienda web.
+      </p>
+
+      <!-- Stats Cards -->
+      <div class="sales-stats-grid" id="salesStatsGrid">
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-coins"></i>
+          <div>
+            <span class="stat-label">Total Vendido</span>
+            <span class="stat-value" id="statTotalVendido">$0 COP</span>
+          </div>
+        </div>
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-receipt"></i>
+          <div>
+            <span class="stat-label">N° de Pedidos</span>
+            <span class="stat-value" id="statTotalPedidos">0</span>
+          </div>
+        </div>
+        <div class="sales-stat-card">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <div>
+            <span class="stat-label">Productos Vendidos</span>
+            <span class="stat-value" id="statTotalProductos">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Table -->
+      <div class="sales-table-wrapper">
+        <table class="sales-table" id="salesTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Productos</th>
+              <th>Zona Envío</th>
+              <th>Subtotal</th>
+              <th>Envío</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="salesTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                Cargando ventas...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
