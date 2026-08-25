@@ -6,33 +6,33 @@
   <title>ROSITA | Accesorios, Maquillaje y Moda - Brilla a tu manera</title>
   <meta name="description" content="Rosita: Tienda de accesorios hechos a mano, bolsos, maquillaje y moda para Mujeres, Hombres y Niñas. Envíos directos a Galapa, Barranquilla y entregas en Guaimaral.">
   
-  <!-- Google Fonts & FontAwesome -->
+  <!-- Fuentes de Google y FontAwesome -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Stylesheet -->
+  <!-- Hoja de Estilos -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- EmailJS SDK -->
+  <!-- SDK de EmailJS -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-  <!-- Supabase SDK -->
+  <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Google Identity Services SDK -->
+  <!-- SDK de Servicios de Identidad de Google -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
-  <!-- Top Announcement Bar -->
+  <!-- Barra Superior de Anuncios -->
   <div class="top-bar">
     <div>
-      ✨ <span>ROSITA:</span> Envíos a Galapa y Barranquilla • Pedidos 100% seguros vía WhatsApp <span>3147857503</span>
+      ✨ <span>ROSITA:</span> Envíos a Galapa y Barranquilla • Pedidos 100% seguros vía WhatsApp <span>3226031596</span>
     </div>
   </div>
 
-  <!-- ADMIN ACTIVE TOP BAR PANEL -->
+  <!-- PANEL SUPERIOR ACTIVO DE ADMIN -->
   <div class="admin-bar" id="adminBar">
     <div class="container">
       <div class="admin-bar-content">
@@ -60,11 +60,11 @@
     </div>
   </div>
 
-  <!-- Header / Navigation -->
+  <!-- Encabezado / Navegación -->
   <header class="header">
     <div class="container">
       <div class="nav-content">
-        <!-- Secret admin trigger: click logo 5 times quickly -->
+        <!-- Activador secreto de admin: hacer clic en el logo 5 veces rápido -->
         <a href="#" class="brand-logo" id="brandLogoSecretTrigger" onclick="handleSecretLogoClick(event)" title="ROSITA - Brilla a tu manera">
           <div class="logo-icon">
             <i class="fa-solid fa-gem"></i>
@@ -75,13 +75,13 @@
           </div>
         </a>
 
-        <!-- Live Search -->
+        <!-- Búsqueda en Vivo -->
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="Buscar accesorios..." oninput="handleSearch()">
         </div>
 
-        <!-- Actions -->
+        <!-- Acciones -->
         <div class="nav-actions">
           <button class="btn-icon" id="cartToggleBtn" onclick="toggleCartDrawer()">
             <i class="fa-solid fa-bag-shopping"></i>
@@ -96,7 +96,7 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Sección Héroe -->
   <section class="hero">
     <div class="container">
       <div class="hero-grid">
@@ -122,7 +122,7 @@
           <div class="hero-img-card">
             <img src="assets/hero.png" alt="Accesorios Rosita - Brilla a tu manera">
           </div>
-          <!-- Floating Badges -->
+          <!-- Insignias Flotantes -->
           <div class="floating-badge floating-badge-1">
             <i class="fa-solid fa-heart"></i>
             <div>
@@ -142,7 +142,7 @@
     </div>
   </section>
 
-  <!-- Trust Bar -->
+  <!-- Barra de Confianza -->
   <section class="trust-section">
     <div class="container">
       <div class="trust-grid">
@@ -179,7 +179,7 @@
     </div>
   </section>
 
-  <!-- Featured Categories -->
+  <!-- Categorías Destacadas -->
   <section class="categories-section">
     <div class="container">
       <div class="section-header text-center">
@@ -215,7 +215,7 @@
     </div>
   </section>
 
-  <!-- Best Sellers Highlight Section -->
+  <!-- Sección Destacada de Más Vendidos -->
   <section class="products-section" style="background: var(--white);">
     <div class="container">
       <div class="section-header text-center">
@@ -224,12 +224,12 @@
       </div>
 
       <div class="product-grid" id="bestSellersGrid">
-        <!-- Rendered dynamically by JavaScript -->
+        <!-- Renderizado dinámicamente por JavaScript -->
       </div>
     </div>
   </section>
 
-  <!-- Full Catalog Section -->
+  <!-- Sección del Catálogo Completo -->
   <section class="products-section" id="catalogo">
     <div class="container">
       <div class="section-header text-center">
@@ -237,7 +237,7 @@
         <h2 class="section-title">Catálogo de Productos</h2>
       </div>
 
-      <!-- Filters Bar -->
+      <!-- Barra de Filtros -->
       <div class="filter-bar">
         <div class="category-tabs">
           <button class="tab-btn active" onclick="filterByCategory('todos', this)">Todos</button>
@@ -247,7 +247,7 @@
         </div>
 
         <div class="filter-group">
-          <!-- Subcategory Select -->
+          <!-- Selector de Subcategoría -->
           <select id="subcategorySelect" class="filter-select" onchange="applyFilters()">
             <option value="todos">Todas las subcategorías</option>
             <option value="accesorios">Accesorios Tejidos</option>
@@ -257,7 +257,7 @@
             <option value="detalles">Detalles Regalo</option>
           </select>
 
-          <!-- Price Filter -->
+          <!-- Filtro de Precio -->
           <div class="price-filter">
             <span>Máx: </span>
             <input type="range" id="priceRange" class="price-slider" min="10000" max="250000" step="5000" value="250000" oninput="updatePriceLabel(this.value)">
@@ -266,14 +266,14 @@
         </div>
       </div>
 
-      <!-- Catalog Grid -->
+      <!-- Cuadrícula de Catálogo -->
       <div class="product-grid" id="catalogGrid">
-        <!-- Rendered dynamically by JavaScript -->
+        <!-- Renderizado dinámicamente por JavaScript -->
       </div>
     </div>
   </section>
 
-  <!-- Shipping & FAQ Section -->
+  <!-- Sección de Envíos y Preguntas Frecuentes -->
   <section class="faq-section" id="envios">
     <div class="container">
       <div class="section-header text-center">
@@ -282,7 +282,7 @@
       </div>
 
       <div class="faq-grid">
-        <!-- Shipping Info Box -->
+        <!-- Caja de Información de Envíos -->
         <div class="shipping-box">
           <h3><i class="fa-solid fa-truck-dot" style="color: var(--primary-pink-dark);"></i> Dónde y Cómo Entregamos</h3>
           <p style="font-size: 0.9rem; color: var(--dark-muted); margin-bottom: 20px;">
@@ -290,10 +290,10 @@
           </p>
 
           <div id="shippingZonesList">
-            <!-- Rendered dynamically by JavaScript -->
+            <!-- Renderizado dinámicamente por JavaScript -->
           </div>
 
-          <!-- Payment Methods -->
+          <!-- Métodos de Pago -->
           <div class="payment-methods">
             <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Métodos de Pago Aceptados:</h4>
             <div class="payment-tags">
@@ -305,7 +305,7 @@
           </div>
         </div>
 
-        <!-- Accordion FAQ -->
+        <!-- Acordeón de Preguntas Frecuentes -->
         <div class="faq-accordion">
           <div class="faq-item open">
             <div class="faq-question" onclick="toggleFaq(this)">
@@ -351,7 +351,7 @@
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- Pie de Página -->
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
@@ -386,7 +386,7 @@
         <div class="footer-col">
           <h4>Contacto</h4>
           <ul class="footer-links">
-            <li><i class="fa-solid fa-phone" style="color: var(--rose-gold-light);"></i> +57 314 785 7503 (Ventas)</li>
+            <li><i class="fa-solid fa-phone" style="color: var(--rose-gold-light);"></i> +57 3226031596 (Ventas)</li>
             <li><i class="fa-solid fa-location-dot" style="color: var(--rose-gold-light);"></i> Galapa & Barranquilla, Colombia</li>
           </ul>
         </div>
@@ -398,27 +398,27 @@
     </div>
   </footer>
 
-  <!-- Floating WhatsApp Action Button -->
+  <!-- Botón Flotante de Acción de WhatsApp -->
   <a href="https://wa.me/573147857503?text=%C2%A1Hola%20Rosita!%20Quiero%20hacer%20una%20consulta%20sobre%20tus%20accesorios." target="_blank" class="floating-wa-btn" title="Contactar por WhatsApp">
     <i class="fa-brands fa-whatsapp"></i>
   </a>
 
-  <!-- Product Quick View Modal -->
+  <!-- Modal de Vista Rápida del Producto -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeProductModal()"></div>
   <div class="product-modal" id="productModal">
     <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-body" id="modalBodyContent">
-      <!-- Dynamically filled by JS -->
+      <!-- Llenado dinámicamente por JS -->
     </div>
   </div>
 
-  <!-- GOOGLE LOGIN & SECURE ADMIN AUTH MODAL -->
+  <!-- MODAL DE INICIO DE SESIÓN DE GOOGLE Y AUTENTICACIÓN SEGURA DE ADMIN -->
   <div class="modal-overlay" id="adminLoginOverlay" onclick="closeAdminLoginModal()"></div>
   <div class="product-modal" id="adminLoginModal" style="max-width: 460px;">
     <button class="modal-close" onclick="closeAdminLoginModal()"><i class="fa-solid fa-xmark"></i></button>
     <div style="padding: 35px;" class="text-center">
 
-      <!-- Icon & Title -->
+      <!-- Icono y Título -->
       <div style="width: 68px; height: 68px; background: linear-gradient(135deg,#FDE8ED,#F5C2CE); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: var(--primary-pink-dark); font-size: 1.8rem; border: 2px solid var(--border-pink);">
         <i class="fa-solid fa-lock"></i>
       </div>
@@ -427,7 +427,7 @@
         Inicia sesión con tu cuenta de Google autorizada o ingresa la clave de acceso.
       </p>
 
-      <!-- Google Sign-In SDK button container -->
+      <!-- Contenedor del botón del SDK de Google Sign-In -->
       <div id="googleSignInBtnContainer" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
 
       <div style="display:flex; align-items:center; margin: 15px 0; color: #B595A5; font-size: 0.75rem;">
@@ -436,7 +436,7 @@
         <div style="flex:1; height:1px; background:#F5D3DD;"></div>
       </div>
 
-      <!-- Secure Admin Password Option -->
+      <!-- Opción de Contraseña Segura de Admin -->
       <div style="background: #FDF2F5; border: 1px solid var(--border-pink); border-radius: 12px; padding: 18px;">
         <div style="text-align:left;">
           <label for="adminPasswordInput" style="font-size:0.78rem; color:var(--dark-muted); display:block; margin-bottom:6px; font-weight:600;">Clave de Administrador:</label>
@@ -455,7 +455,7 @@
     </div>
   </div>
 
-  <!-- ADMIN ADD / EDIT PRODUCT MODAL -->
+  <!-- MODAL DE AÑADIR / EDITAR PRODUCTO DE ADMIN -->
   <div class="modal-overlay" id="adminProductOverlay" onclick="closeAdminProductModal()"></div>
   <div class="product-modal" id="adminProductModal" style="max-width: 650px;">
     <button class="modal-close" onclick="closeAdminProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -548,7 +548,7 @@
     </div>
   </div>
 
-  <!-- ADMIN EDIT SHIPPING RATES MODAL -->
+  <!-- MODAL DE EDITAR TARIFAS DE ENVÍO DE ADMIN -->
   <div class="modal-overlay" id="adminShippingOverlay" onclick="closeAdminShippingModal()"></div>
   <div class="product-modal" id="adminShippingModal" style="max-width: 550px;">
     <button class="modal-close" onclick="closeAdminShippingModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -608,7 +608,7 @@
     </div>
   </div>
 
-  <!-- ADMIN SALES HISTORY MODAL -->
+  <!-- MODAL DE HISTORIAL DE VENTAS DE ADMIN -->
   <div class="modal-overlay" id="salesOverlay" onclick="closeSalesModal()"></div>
   <div class="product-modal sales-modal" id="salesModal" style="max-width: 900px;">
     <button class="modal-close" onclick="closeSalesModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -620,7 +620,7 @@
         Registro de todos los pedidos realizados desde la tienda web.
       </p>
 
-      <!-- Stats Cards -->
+      <!-- Tarjetas de Estadísticas -->
       <div class="sales-stats-grid" id="salesStatsGrid">
         <div class="sales-stat-card">
           <i class="fa-solid fa-coins"></i>
@@ -645,7 +645,7 @@
         </div>
       </div>
 
-      <!-- Sales Table -->
+      <!-- Tabla de Ventas -->
       <div class="sales-table-wrapper">
         <table class="sales-table" id="salesTable">
           <thead>
@@ -671,7 +671,7 @@
     </div>
   </div>
 
-  <!-- Shopping Cart Drawer -->
+  <!-- Cajón del Carrito de Compras -->
   <div class="cart-drawer" id="cartDrawer">
     <div class="cart-header">
       <h3><i class="fa-solid fa-bag-shopping" style="color: var(--primary-pink-dark);"></i> Mi Carrito ROSITA</h3>
@@ -679,14 +679,14 @@
     </div>
 
     <div class="cart-body" id="cartItemsContainer">
-      <!-- Dynamically rendered cart items -->
+      <!-- Artículos del carrito renderizados dinámicamente -->
     </div>
 
     <div class="cart-footer">
       <div class="delivery-selector">
         <label for="deliveryZoneSelect"><i class="fa-solid fa-location-dot" style="color: var(--rose-gold);"></i> Zona de Domicilio / Entrega:</label>
         <select id="deliveryZoneSelect" class="delivery-select" onchange="updateCartTotals()">
-          <!-- Populated dynamically with configured rates -->
+          <!-- Poblado dinámicamente con tarifas configuradas -->
         </select>
       </div>
 
