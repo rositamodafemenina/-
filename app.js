@@ -1,22 +1,22 @@
 /* ==========================================================================
-   ROSITA - Application Logic (Catalog, Filters, Admin Panel & WhatsApp)
+   ROSITA - Lógica de la Aplicación (Catálogo, Filtros, Panel Admin & WhatsApp)
    ========================================================================== */
 
-// Auth State & Constants
+// Estado de Autenticación y Constantes
 const ADMIN_EMAIL = "rositamodafemenina@gmail.com";
-// Hashed for display safety - never expose raw email in UI
+// Por seguridad - nunca exponer el correo directamente en la interfaz
 const ADMIN_PASS_HASH = "R0s1t4Adm1n2026!";
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com";
 let currentUserEmail = localStorage.getItem("rosita_user_email") || null;
 let adminLoginAttempts = 0;
 let adminLockUntil = 0;
 
-// Supabase Configuration
+// Configuración de Supabase
 const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co';  // Reemplaza con tu URL de Supabase
 const SUPABASE_ANON_KEY = 'sb_publishable_nl9TnJMNj5-O5t4yThW8fg_o-grIWgV';  // Reemplaza con tu clave pública anon
 let supabaseClient = null;
 
-// Default Product Catalog
+// Catálogo de Productos por Defecto
 const defaultProductsData = [
   {
     id: 1,
@@ -132,41 +132,41 @@ const defaultProductsData = [
   }
 ];
 
-// Default Shipping Rates Data
+// Datos de Tarifas de Envío por Defecto
 const defaultShippingRates = {
   guaimaral: { name: "Guaimaral / Punto de Encuentro", price: 0, note: "Entregas gratuitas en puntos acordados" },
   galapa: { name: "Galapa - Domicilio", price: 5000, note: "Entrega directa en tu dirección en Galapa" },
   barranquilla: { name: "Barranquilla - Domicilio", price: 8000, note: "Envíos diarios a cualquier barrio de Barranquilla" }
 };
 
-// Application Dynamic State
+// Estado Dinámico de la Aplicación
 let productsData = JSON.parse(localStorage.getItem("rosita_products_v2")) || defaultProductsData;
 let shippingRates = JSON.parse(localStorage.getItem("rosita_shipping_v2")) || defaultShippingRates;
 let cart = JSON.parse(localStorage.getItem("rosita_cart")) || [];
 let isAdminLoggedIn = localStorage.getItem("rosita_admin_logged") === "true";
 
-// Filter State
+// Estado de Filtros
 let activeCategory = "todos";
 let activeSubcategory = "todos";
 let activeMaxPrice = 250000;
 let searchQuery = "";
 
-// Modal Active Product State
+// Estado del Producto Activo en el Modal
 let currentModalProduct = null;
 let selectedModalVariant = "";
 let selectedModalQty = 1;
 
-// Currency Formatter
+// Formateador de Moneda
 function formatCOP(amount) {
   return "$ " + Number(amount).toLocaleString("es-CO") + " COP";
 }
 
-// Initialize Application
+// Inicializar la Aplicación
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize EmailJS with the Public Key
+  // Inicializar EmailJS con la clave pública
   emailjs.init("6wn4STbb6fAn_tW-7");
 
-  // Initialize Supabase Client
+  // Inicializar el cliente de Supabase
   if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI') {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('Supabase conectado correctamente.');
@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCartBadge();
 });
 
-// Admin Panel & Auth State Check
+// Verificar Estado del Panel de Administración y Autenticación
 function checkAdminStateUI() {
   const adminBar = document.getElementById("adminBar");
 
@@ -194,16 +194,16 @@ function checkAdminStateUI() {
 }
 
 // ============================================================
-// SECRET ADMIN TRIGGER (5 rapid clicks on the logo)
+// ACTIVADOR SECRETO DE ADMIN (5 clics rápidos en el logo)
 // ============================================================
 let _secretClickCount = 0;
 let _secretClickTimer = null;
 
 function handleSecretLogoClick(e) {
-  // Don't prevent default so the logo still works as a normal link
+  // No prevenir el comportamiento por defecto para que el logo siga funcionando como enlace normal
   _secretClickCount++;
 
-  // Clear the reset timer each click
+  // Limpiar el temporizador de reinicio en cada clic
   if (_secretClickTimer) clearTimeout(_secretClickTimer);
 
   if (_secretClickCount >= 5) {
@@ -213,14 +213,14 @@ function handleSecretLogoClick(e) {
     return;
   }
 
-  // Reset counter if no click happens within 2 seconds
+  // Reiniciar el contador si no hay clics en 2 segundos
   _secretClickTimer = setTimeout(() => {
     _secretClickCount = 0;
   }, 2000);
 }
 
 // ============================================================
-// GOOGLE SIGN-IN & ADMIN AUTHENTICATION
+// INICIO DE SESIÓN CON GOOGLE Y AUTENTICACIÓN DE ADMINISTRADOR
 // ============================================================
 
 function openAdminLoginModal() {
@@ -325,7 +325,7 @@ function processGoogleLoginEmail(email) {
 function verifyAdminPassword() {
   const now = Date.now();
 
-  // Check if locked out
+  // Verificar si el acceso está bloqueado
   if (now < adminLockUntil) {
     const secsLeft = Math.ceil((adminLockUntil - now) / 1000);
     const errorEl = document.getElementById("adminPasswordError");
@@ -343,7 +343,7 @@ function verifyAdminPassword() {
   const entered = input.value;
 
   if (entered === ADMIN_PASS_HASH) {
-    // Correct password — grant admin
+    // Contraseña correcta — otorgar acceso de administrador
     adminLoginAttempts = 0;
     isAdminLoggedIn = true;
     currentUserEmail = ADMIN_EMAIL;
@@ -361,14 +361,14 @@ function verifyAdminPassword() {
     input.value = "";
     if (errorEl) {
       if (adminLoginAttempts >= 5) {
-        adminLockUntil = Date.now() + 60000; // Lock for 60 seconds
+        adminLockUntil = Date.now() + 60000; // Bloquear por 60 segundos
         errorEl.innerHTML = '<i class="fa-solid fa-lock"></i> Demasiados intentos. Bloqueado por 60 segundos.';
       } else {
         const remaining = 5 - adminLoginAttempts;
         errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Clave incorrecta. Acceso denegado. (${remaining} intento${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''})` ;
       }
       errorEl.style.display = "block";
-      // Shake animation
+      // Animación de sacudida
       input.style.borderColor = "#E53935";
       setTimeout(() => { input.style.borderColor = ""; }, 1500);
     }
@@ -386,7 +386,7 @@ function logoutAdmin() {
   showToastNotification("Sesión cerrada.");
 }
 
-// Render Shipping Info Section & Select Dropdowns
+// Renderizar Sección de Información de Envíos y Selectores
 function renderShippingZones() {
   const container = document.getElementById("shippingZonesList");
   if (!container) return;
@@ -429,7 +429,7 @@ function populateDeliverySelectOptions() {
   `;
 }
 
-// Render Best Sellers
+// Renderizar Productos Más Vendidos
 function renderBestSellers() {
   const container = document.getElementById("bestSellersGrid");
   if (!container) return;
@@ -438,7 +438,7 @@ function renderBestSellers() {
   container.innerHTML = bestSellers.map(p => createProductCardHTML(p)).join("");
 }
 
-// Render Catalog Grid with Active Filters
+// Renderizar la Cuadrícula del Catálogo con los Filtros Activos
 function applyFilters() {
   const container = document.getElementById("catalogGrid");
   if (!container) return;
@@ -470,7 +470,7 @@ function applyFilters() {
   container.innerHTML = filtered.map(p => createProductCardHTML(p)).join("");
 }
 
-// Product Card HTML Generator
+// Generador de HTML para Tarjeta de Producto
 function createProductCardHTML(p) {
   const colorDots = (p.variants || []).map(v => {
     const hex = (p.variantColors && p.variantColors[v]) ? p.variantColors[v] : "#D87093";
@@ -522,14 +522,14 @@ function createProductCardHTML(p) {
   `;
 }
 
-// ADMIN PRODUCT MANAGEMENT (Add / Edit / Delete)
+// GESTIÓN DE PRODUCTOS ADMIN (Añadir / Editar / Eliminar)
 function openAddProductModal() {
   if (!isAdminLoggedIn) return;
 
   document.getElementById("editProductId").value = "";
   document.getElementById("adminProductModalTitle").innerText = "Añadir Nuevo Producto";
   document.getElementById("adminProductForm").reset();
-  // Reset image upload preview
+  // Reiniciar la vista previa de imagen
   const previewContainer = document.getElementById("imagePreviewContainer");
   if (previewContainer) previewContainer.style.display = "none";
   const imageDataInput = document.getElementById("adminImageData");
@@ -556,7 +556,7 @@ function openEditProductModal(productId) {
   document.getElementById("adminPrice").value = p.price;
   document.getElementById("adminBadge").value = p.badge || "";
 
-  // Show image preview for file/asset-based images
+  // Mostrar vista previa para imágenes de archivo o assets
   const previewContainer = document.getElementById("imagePreviewContainer");
   const previewImg = document.getElementById("imagePreview");
   const imageDataInput = document.getElementById("adminImageData");
@@ -606,7 +606,7 @@ function handleSaveProduct(e) {
   const variantsArray = variantsInput ? variantsInput.split(",").map(v => v.trim()) : ["Estándar"];
 
   if (editId) {
-    // Editing existing product
+    // Editando un producto existente
     const idx = productsData.findIndex(item => item.id === Number(editId));
     if (idx > -1) {
       productsData[idx] = {
@@ -618,7 +618,7 @@ function handleSaveProduct(e) {
       showToastNotification(`Producto "${title}" actualizado correctamente.`);
     }
   } else {
-    // Creating new product
+    // Creando un nuevo producto
     const newId = productsData.length > 0 ? Math.max(...productsData.map(p => p.id)) + 1 : 1;
     const newProduct = {
       id: newId,
@@ -655,7 +655,7 @@ function saveProductsData() {
   localStorage.setItem("rosita_products_v2", JSON.stringify(productsData));
 }
 
-// ADMIN SHIPPING RATES MANAGEMENT
+// GESTIÓN DE TARIFAS DE ENVÍO (ADMIN)
 function openEditShippingModal() {
   if (!isAdminLoggedIn) return;
 
@@ -713,7 +713,7 @@ function resetCatalogToDefaults() {
   }
 }
 
-// Category Tab Switcher
+// Selector de Pestañas por Categoría
 function filterByCategory(category, btnElement) {
   activeCategory = category;
   
@@ -736,7 +736,7 @@ function filterByCategory(category, btnElement) {
   }
 }
 
-// Price Slider Handler
+// Manejador del Deslizador de Precio
 function updatePriceLabel(value) {
   activeMaxPrice = parseInt(value);
   const label = document.getElementById("priceLabel");
@@ -744,7 +744,7 @@ function updatePriceLabel(value) {
   applyFilters();
 }
 
-// Live Search Input Handler
+// Manejador de Búsqueda en Tiempo Real
 function handleSearch() {
   const input = document.getElementById("searchInput");
   if (input) {
@@ -753,7 +753,7 @@ function handleSearch() {
   }
 }
 
-// Product Quick View Modal
+// Modal de Vista Rápida del Producto
 function openProductModal(productId) {
   const p = productsData.find(item => item.id === productId);
   if (!p) return;
@@ -834,7 +834,7 @@ function closeProductModal() {
   document.getElementById("productModal").classList.remove("active");
 }
 
-// Cart Logic
+// Lógica del Carrito de Compras
 function quickAddToCart(productId) {
   const p = productsData.find(item => item.id === productId);
   if (!p) return;
@@ -970,7 +970,7 @@ function updateCartTotals() {
   if (totalSpan) totalSpan.innerText = formatCOP(grandTotal);
 }
 
-// WhatsApp Direct Purchase Logic
+// Lógica de Compra Directa por WhatsApp
 function checkoutViaWhatsApp() {
   if (cart.length === 0) {
     alert("Tu carrito está vacío. Añade productos antes de finalizar la compra.");
@@ -1001,15 +1001,15 @@ function checkoutViaWhatsApp() {
                     `💰 *TOTAL A PAGAR:* ${formatCOP(total)}\n\n` +
                     `Quedo atento(a) para acordar el pago y la entrega. ¡Muchas gracias! ✨`;
 
-  const phone = "573147857503";
+  const phone = "573226031596";
   const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
 
   window.open(waUrl, "_blank");
 
-  // Record sale in Supabase
+  // Registrar la venta en Supabase
   recordSale(cart, deliveryZoneName, shippingCost, subtotal, total);
 
-  // Clear cart after checkout
+  // Vaciar el carrito después de la compra
   cart = [];
   saveCart();
   renderCart();
@@ -1047,13 +1047,13 @@ function buyModalItemWhatsApp() {
   window.open(waUrl, "_blank");
 }
 
-// Accordion FAQ Toggle
+// Acordeón de Preguntas Frecuentes
 function toggleFaq(headerElement) {
   const item = headerElement.parentElement;
   item.classList.toggle("open");
 }
 
-// Simple Toast Notification
+// Notificación Toast Simple
 function showToastNotification(message) {
   let toast = document.getElementById("toastNotification");
   if (!toast) {
@@ -1087,7 +1087,7 @@ function showToastNotification(message) {
 }
 
 // ============================================================
-// IMAGE FILE UPLOAD HANDLING
+// MANEJO DE CARGA DE ARCHIVOS DE IMAGEN
 // ============================================================
 
 function handleImageFileSelect(event) {
@@ -1152,7 +1152,7 @@ function removeSelectedImage() {
 }
 
 // ============================================================
-// SUPABASE SALES RECORDING & HISTORY
+// REGISTRO E HISTORIAL DE VENTAS EN SUPABASE
 // ============================================================
 
 async function recordSale(cartItems, zonaEnvio, costoEnvio, subtotal, total) {
@@ -1223,7 +1223,7 @@ async function loadSalesHistory() {
     return;
   }
 
-  // Loading state
+  // Estado de carga
   tbody.innerHTML = `
     <tr>
       <td colspan="6" style="text-align: center; padding: 40px; color: var(--dark-muted);">
@@ -1266,7 +1266,7 @@ async function loadSalesHistory() {
     return;
   }
 
-  // Calculate stats
+  // Calcular estadísticas
   let totalVendido = 0;
   let totalProductos = 0;
 
@@ -1283,7 +1283,7 @@ async function loadSalesHistory() {
   if (statPedidos) statPedidos.innerText = data.length;
   if (statProductos) statProductos.innerText = totalProductos;
 
-  // Render table rows
+  // Renderizar las filas de la tabla
   tbody.innerHTML = data.map(venta => {
     const fecha = new Date(venta.fecha);
     const fechaStr = fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
