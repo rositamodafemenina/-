@@ -1028,7 +1028,7 @@ function directBuyWhatsApp(productId) {
             `• Precio: ${formatCOP(p.price)}\n\n` +
             `¿Me indicas disponibilidad para entrega en Galapa / Barranquilla? ✨`;
 
-  const waUrl = `https://wa.me/573147857503?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/573226031596?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, "_blank");
 }
 
@@ -1043,7 +1043,7 @@ function buyModalItemWhatsApp() {
             `• Valor Total: ${formatCOP(totalItemPrice)}\n\n` +
             `¿Cómo podemos coordinar la entrega? ✨`;
 
-  const waUrl = `https://wa.me/573147857503?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/573226031596?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, "_blank");
 }
 
