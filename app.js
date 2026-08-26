@@ -473,8 +473,9 @@ function applyFilters() {
 // Generador de HTML para Tarjeta de Producto
 function createProductCardHTML(p) {
   const colorDots = (p.variants || []).map(v => {
-    const hex = (p.variantColors && p.variantColors[v]) ? p.variantColors[v] : "#D87093";
-    return `<span class="variant-dot" style="background-color: ${hex};" title="${v}"></span>`;
+    const colorName = typeof v === 'object' ? v.color : v;
+    const hex = (p.variantColors && p.variantColors[colorName]) ? p.variantColors[colorName] : "#D87093";
+    return `<span class="variant-dot" style="background-color: ${hex};" title="${colorName}"></span>`;
   }).join("");
 
   const adminControlsHTML = isAdminLoggedIn ? `
@@ -537,6 +538,9 @@ function openAddProductModal() {
   const fileInput = document.getElementById("adminImageFile");
   if (fileInput) fileInput.value = "";
   
+  document.getElementById("adminVariantsContainer").innerHTML = "";
+  addAdminVariantRow();
+
   document.getElementById("adminProductOverlay").classList.add("active");
   document.getElementById("adminProductModal").classList.add("active");
 }
@@ -572,7 +576,21 @@ function openEditProductModal(productId) {
     if (imageDataInput) imageDataInput.value = "";
   }
 
-  document.getElementById("adminVariants").value = (p.variants || []).join(", ");
+  const variantsContainer = document.getElementById("adminVariantsContainer");
+  if (variantsContainer) {
+    variantsContainer.innerHTML = "";
+    const variants = p.variants || [];
+    if (variants.length === 0) {
+      addAdminVariantRow();
+    } else {
+      variants.forEach(v => {
+        const color = typeof v === 'object' ? v.color : v;
+        const image = typeof v === 'object' ? v.image : "";
+        addAdminVariantRow(color, image);
+      });
+    }
+  }
+
   document.getElementById("adminDescription").value = p.description;
   document.getElementById("adminPackaging").value = p.packagingNote || "";
   document.getElementById("adminIsBestSeller").checked = !!p.isBestSeller;
@@ -598,12 +616,28 @@ function handleSaveProduct(e) {
   const imageDataInput = document.getElementById("adminImageData");
   const imageData = imageDataInput ? imageDataInput.value : "";
   const image = imageData || "assets/woven_bracelets.png";
-  const variantsInput = document.getElementById("adminVariants").value.trim();
+  
+  const variantsArray = [];
+  const variantRows = document.querySelectorAll(".admin-variant-row");
+  if (variantRows.length > 0) {
+    variantRows.forEach(row => {
+      const colorInput = row.querySelector(".variant-color-input");
+      const imageInput = row.querySelector(".variant-image-data");
+      if (colorInput && colorInput.value.trim()) {
+        variantsArray.push({
+          color: colorInput.value.trim(),
+          image: imageInput ? imageInput.value : ""
+        });
+      }
+    });
+  }
+  if (variantsArray.length === 0) {
+    variantsArray.push({ color: "Estándar", image: "" });
+  }
+
   const description = document.getElementById("adminDescription").value.trim();
   const packagingNote = document.getElementById("adminPackaging").value.trim();
   const isBestSeller = document.getElementById("adminIsBestSeller").checked;
-
-  const variantsArray = variantsInput ? variantsInput.split(",").map(v => v.trim()) : ["Estándar"];
 
   if (editId) {
     // Editando un producto existente
@@ -759,21 +793,29 @@ function openProductModal(productId) {
   if (!p) return;
 
   currentModalProduct = p;
-  selectedModalVariant = (p.variants && p.variants[0]) ? p.variants[0] : "Único";
+  
+  let variants = p.variants || [];
+  if (variants.length > 0 && typeof variants[0] === 'string') {
+    variants = variants.map(v => ({ color: v, image: p.image }));
+  } else if (variants.length === 0) {
+    variants = [{ color: "Único", image: p.image }];
+  }
+
+  selectedModalVariant = variants[0].color;
   selectedModalQty = 1;
 
   const modalBody = document.getElementById("modalBodyContent");
   if (!modalBody) return;
 
-  const variantChipsHTML = (p.variants || ["Único"]).map((v, idx) => `
-    <button class="variant-chip ${idx === 0 ? 'selected' : ''}" onclick="selectModalVariant('${v}', this)">
-      ${v}
+  const variantChipsHTML = variants.map((v, idx) => `
+    <button class="variant-chip ${idx === 0 ? 'selected' : ''}" onclick="selectModalVariant('${v.color}', '${v.image || ''}', this)">
+      ${v.color}
     </button>
   `).join("");
 
   modalBody.innerHTML = `
     <div class="modal-img-col">
-      <img src="${p.image}" alt="${p.title}" onerror="this.src='assets/woven_bracelets.png'">
+      <img id="modalMainImage" src="${variants[0].image || p.image}" alt="${p.title}" onerror="this.src='assets/woven_bracelets.png'">
     </div>
     <div class="modal-info-col">
       <span style="font-size: 0.8rem; font-weight: 700; color: var(--rose-gold); text-transform: uppercase;">${p.category} • ${p.subcategory}</span>
@@ -816,11 +858,16 @@ function openProductModal(productId) {
   document.getElementById("productModal").classList.add("active");
 }
 
-function selectModalVariant(variant, btn) {
-  selectedModalVariant = variant;
+function selectModalVariant(color, image, btn) {
+  selectedModalVariant = color;
   const chips = document.querySelectorAll(".variant-chip");
   chips.forEach(c => c.classList.remove("selected"));
   btn.classList.add("selected");
+  
+  if (image && image !== 'undefined' && image !== '') {
+    const mainImg = document.getElementById("modalMainImage");
+    if (mainImg) mainImg.src = image;
+  }
 }
 
 function changeModalQty(delta) {
@@ -839,7 +886,9 @@ function quickAddToCart(productId) {
   const p = productsData.find(item => item.id === productId);
   if (!p) return;
 
-  const defaultVariant = (p.variants && p.variants[0]) ? p.variants[0] : "Único";
+  const defaultVariantObj = (p.variants && p.variants[0]) ? p.variants[0] : "Único";
+  const defaultVariant = typeof defaultVariantObj === 'object' ? defaultVariantObj.color : defaultVariantObj;
+  
   addToCartState(p, defaultVariant, 1);
   showToastNotification(`¡"${p.title}" agregado al carrito!`);
 }
@@ -1021,7 +1070,8 @@ function directBuyWhatsApp(productId) {
   const p = productsData.find(item => item.id === productId);
   if (!p) return;
 
-  const defaultVariant = (p.variants && p.variants[0]) ? p.variants[0] : "Único";
+  const defaultVariantObj = (p.variants && p.variants[0]) ? p.variants[0] : "Único";
+  const defaultVariant = typeof defaultVariantObj === 'object' ? defaultVariantObj.color : defaultVariantObj;
   let msg = `¡Hola Rosita! 🌸 Quiero comprar este producto:\n\n` +
             `• *${p.title}*\n` +
             `• Color/Variante: _${defaultVariant}_\n` +
@@ -1084,6 +1134,72 @@ function showToastNotification(message) {
   setTimeout(() => {
     toast.style.opacity = "0";
   }, 2500);
+}
+
+// ============================================================
+// MANEJO DE VARIANTES Y SUS IMÁGENES
+// ============================================================
+function addAdminVariantRow(color = "", imageBase64 = "") {
+  const container = document.getElementById("adminVariantsContainer");
+  if (!container) return;
+
+  const rowId = 'varRow_' + Date.now() + Math.floor(Math.random() * 1000);
+  
+  const row = document.createElement("div");
+  row.className = "admin-variant-row";
+  row.id = rowId;
+  row.style.cssText = "display: flex; gap: 8px; align-items: center; background: #FDF2F5; padding: 10px; border-radius: 8px; border: 1px solid var(--border-pink);";
+  
+  row.innerHTML = `
+    <input type="text" class="form-control variant-color-input" placeholder="Nombre (ej: Rojo)" value="${color}" style="flex: 2; margin: 0; padding: 8px;">
+    
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;">
+      <input type="file" id="file_${rowId}" accept="image/*" style="display: none;" onchange="handleVariantImageSelect(event, '${rowId}')">
+      <input type="hidden" class="variant-image-data" id="data_${rowId}" value="${imageBase64}">
+      
+      <img id="img_${rowId}" src="${imageBase64}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px; display: ${imageBase64 ? 'block' : 'none'}; border: 1px solid #ddd;">
+      
+      <button type="button" class="btn-secondary" onclick="document.getElementById('file_${rowId}').click()" style="padding: 6px; font-size: 0.8rem; flex: 1; text-align: center;" title="Subir imagen">
+        <i class="fa-solid fa-camera"></i>
+      </button>
+    </div>
+    
+    <button type="button" onclick="removeAdminVariantRow('${rowId}')" style="background: none; border: none; color: #E53935; cursor: pointer; padding: 4px;" title="Quitar variante">
+      <i class="fa-solid fa-circle-xmark"></i>
+    </button>
+  `;
+  container.appendChild(row);
+}
+
+function removeAdminVariantRow(rowId) {
+  const row = document.getElementById(rowId);
+  if (row) row.remove();
+}
+
+function handleVariantImageSelect(event, rowId) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToastNotification("Por favor selecciona una imagen válida.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    compressImage(e.target.result, 600, 0.7, function(compressedBase64) {
+      const imgEl = document.getElementById('img_' + rowId);
+      const dataEl = document.getElementById('data_' + rowId);
+      if (imgEl) {
+        imgEl.src = compressedBase64;
+        imgEl.style.display = 'block';
+      }
+      if (dataEl) {
+        dataEl.value = compressedBase64;
+      }
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 // ============================================================
