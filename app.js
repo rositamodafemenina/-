@@ -1176,7 +1176,7 @@ function removeAdminVariantRow(rowId) {
   if (row) row.remove();
 }
 
-function handleVariantImageSelect(event, rowId) {
+async function handleVariantImageSelect(event, rowId) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -1185,28 +1185,36 @@ function handleVariantImageSelect(event, rowId) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    compressImage(e.target.result, 600, 0.7, function(compressedBase64) {
-      const imgEl = document.getElementById('img_' + rowId);
-      const dataEl = document.getElementById('data_' + rowId);
-      if (imgEl) {
-        imgEl.src = compressedBase64;
-        imgEl.style.display = 'block';
-      }
-      if (dataEl) {
-        dataEl.value = compressedBase64;
-      }
-    });
-  };
-  reader.readAsDataURL(file);
+  const imgEl = document.getElementById('img_' + rowId);
+  const dataEl = document.getElementById('data_' + rowId);
+  
+  if (imgEl) {
+    // Indicador de carga visual
+    imgEl.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZmlsbD0iI2NjYyIgZD0iTTI1IDJDMTIuMyAyIDIgMTIuMyAyIDI1czEwLjMgMjMgMjMgMjMgMjMtMTAuMyAyMy0yM1MzNy43IDIgMjUgMnptMCA0MmMtMTAuNSAwLTE5LTguNS0xOS0xOVMxNC41IDYgMjUgNiAzNCAxNC41IDM0IDI1IDEwLjUgNDQgMjUgNDR6Ii8+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTI1IDhDMTUuNiA4IDggMTUuNiA4IDI1cy0yIDItMiAwaTJDOCA0LjcgMTQuNyAyIDI1IDJzMi0yIDIgMnoiPjxhbmltYXRlVHJhbnNmb3JtIGF0dHJpYnV0ZU5hbWU9InRyYW5zZm9ybSIgdHlwZT0icm90YXRlIiBmcm9tPSIwIDI1IDI1IiB0bz0iMzYwIDI1IDI1IiBkdXI9IjFzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPjwvcGF0aD48L3N2Zz4=";
+    imgEl.style.display = 'block';
+  }
+
+  try {
+    const publicUrl = await uploadImageToSupabase(file);
+    if (imgEl) {
+      imgEl.src = publicUrl;
+    }
+    if (dataEl) {
+      dataEl.value = publicUrl;
+    }
+    showToastNotification("Imagen de variante subida correctamente. ✅");
+  } catch (error) {
+    console.error("Error al subir imagen:", error);
+    showToastNotification("Error al subir imagen de variante.");
+    if (imgEl) imgEl.style.display = 'none';
+  }
 }
 
 // ============================================================
 // MANEJO DE CARGA DE ARCHIVOS DE IMAGEN
 // ============================================================
 
-function handleImageFileSelect(event) {
+async function handleImageFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -1215,21 +1223,50 @@ function handleImageFileSelect(event) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    compressImage(e.target.result, 800, 0.7, function(compressedBase64) {
-      const previewContainer = document.getElementById("imagePreviewContainer");
-      const previewImg = document.getElementById("imagePreview");
-      const imageDataInput = document.getElementById("adminImageData");
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const previewImg = document.getElementById("imagePreview");
+  const imageDataInput = document.getElementById("adminImageData");
 
-      if (previewImg) previewImg.src = compressedBase64;
-      if (previewContainer) previewContainer.style.display = "flex";
-      if (imageDataInput) imageDataInput.value = compressedBase64;
+  if (previewImg) previewImg.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZmlsbD0iI2NjYyIgZD0iTTI1IDJDMTIuMyAyIDIgMTIuMyAyIDI1czEwLjMgMjMgMjMgMjMgMjMtMTAuMyAyMy0yM1MzNy43IDIgMjUgMnptMCA0MmMtMTAuNSAwLTE5LTguNS0xOS0xOVMxNC41IDYgMjUgNiAzNCAxNC41IDM0IDI1IDEwLjUgNDQgMjUgNDR6Ii8+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTI1IDhDMTUuNiA4IDggMTUuNiA4IDI1cy0yIDItMiAwaTJDOCA0LjcgMTQuNyAyIDI1IDJzMi0yIDIgMnoiPjxhbmltYXRlVHJhbnNmb3JtIGF0dHJpYnV0ZU5hbWU9InRyYW5zZm9ybSIgdHlwZT0icm90YXRlIiBmcm9tPSIwIDI1IDI1IiB0bz0iMzYwIDI1IDI1IiBkdXI9IjFzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPjwvcGF0aD48L3N2Zz4=";
+  if (previewContainer) previewContainer.style.display = "flex";
 
-      showToastNotification("¡Imagen cargada correctamente! 📷");
-    });
-  };
-  reader.readAsDataURL(file);
+  try {
+    const publicUrl = await uploadImageToSupabase(file);
+    if (previewImg) previewImg.src = publicUrl;
+    if (imageDataInput) imageDataInput.value = publicUrl;
+    showToastNotification("¡Imagen cargada correctamente a Supabase! 📷");
+  } catch (error) {
+    console.error("Error al subir imagen:", error);
+    showToastNotification("Error al subir imagen principal.");
+    if (previewContainer) previewContainer.style.display = "none";
+  }
+}
+
+async function uploadImageToSupabase(file) {
+  if (!supabaseClient) {
+    throw new Error("Supabase no está configurado.");
+  }
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+  
+  // Sube el archivo al bucket "productos_img"
+  const { data, error } = await supabaseClient
+    .storage
+    .from('productos_img')
+    .upload(fileName, file);
+
+  if (error) {
+    throw error;
+  }
+
+  // Obtiene la URL pública
+  const { data: publicUrlData } = supabaseClient
+    .storage
+    .from('productos_img')
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
 }
 
 function compressImage(base64Str, maxWidth, quality, callback) {
