@@ -1,8 +1,8 @@
 const SUPABASE_URL = 'https://yucupzwonmzjahifvqrd.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_nl9TnJMNj5-O5t4yThW8fg_o-grIWgV';
 
-async function testDelete() {
-  const url = `${SUPABASE_URL}/storage/v1/object/productos_img/catalog.json`;
+async function testVentasDelete() {
+  const url = `${SUPABASE_URL}/rest/v1/ventas?zona_envio=eq.__CATALOG_DATA__`;
   
   try {
     const res = await fetch(url, {
@@ -20,4 +20,4 @@ async function testDelete() {
   }
 }
 
-testDelete();
+testVentasDelete();
