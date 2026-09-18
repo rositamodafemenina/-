@@ -162,7 +162,7 @@ function formatCOP(amount) {
 }
 
 // Inicializar la Aplicación
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Inicializar EmailJS con la clave pública
   emailjs.init("6wn4STbb6fAn_tW-7");
 
@@ -170,6 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof supabase !== 'undefined' && SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI') {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('Supabase conectado correctamente.');
+    
+    // Cargar catálogo y tarifas globales
+    await loadProductsFromSupabase();
+    await loadShippingFromSupabase();
   } else {
     console.warn('Supabase no configurado. Reemplaza las credenciales en app.js.');
   }
@@ -685,8 +689,42 @@ function deleteProduct(productId) {
   }
 }
 
-function saveProductsData() {
+async function saveProductsData() {
   localStorage.setItem("rosita_products_v2", JSON.stringify(productsData));
+  
+  if (supabaseClient) {
+    try {
+      const blob = new Blob([JSON.stringify(productsData)], { type: 'application/json' });
+      const { error } = await supabaseClient
+        .storage
+        .from('productos_img')
+        .upload('catalog.json', blob, {
+          upsert: true,
+          contentType: 'application/json'
+        });
+      if (error) console.error("Error subiendo catálogo:", error);
+    } catch (err) {
+      console.error("Excepción al subir catálogo:", err);
+    }
+  }
+}
+
+async function loadProductsFromSupabase() {
+  try {
+    const { data } = supabaseClient.storage.from('productos_img').getPublicUrl('catalog.json');
+    if (data && data.publicUrl) {
+      const response = await fetch(data.publicUrl + '?t=' + Date.now());
+      if (response.ok) {
+        const fetchedProducts = await response.json();
+        if (fetchedProducts && Array.isArray(fetchedProducts)) {
+          productsData = fetchedProducts;
+          localStorage.setItem("rosita_products_v2", JSON.stringify(productsData));
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar productos desde Supabase:", error);
+  }
 }
 
 // GESTIÓN DE TARIFAS DE ENVÍO (ADMIN)
@@ -711,7 +749,7 @@ function closeAdminShippingModal() {
   document.getElementById("adminShippingModal").classList.remove("active");
 }
 
-function handleSaveShipping(e) {
+async function handleSaveShipping(e) {
   e.preventDefault();
 
   shippingRates.guaimaral.price = parseFloat(document.getElementById("shipPriceGuaimaral").value) || 0;
@@ -724,6 +762,15 @@ function handleSaveShipping(e) {
   shippingRates.barranquilla.note = document.getElementById("shipNoteBarranquilla").value.trim();
 
   localStorage.setItem("rosita_shipping_v2", JSON.stringify(shippingRates));
+
+  if (supabaseClient) {
+    try {
+      const blob = new Blob([JSON.stringify(shippingRates)], { type: 'application/json' });
+      await supabaseClient.storage.from('productos_img').upload('shipping.json', blob, { upsert: true, contentType: 'application/json' });
+    } catch (err) {
+      console.error("Error subiendo envíos:", err);
+    }
+  }
 
   renderShippingZones();
   populateDeliverySelectOptions();
@@ -739,11 +786,36 @@ function resetCatalogToDefaults() {
     shippingRates = defaultShippingRates;
     localStorage.removeItem("rosita_products_v2");
     localStorage.removeItem("rosita_shipping_v2");
+    
+    saveProductsData();
+    if (supabaseClient) {
+      const blob = new Blob([JSON.stringify(shippingRates)], { type: 'application/json' });
+      supabaseClient.storage.from('productos_img').upload('shipping.json', blob, { upsert: true, contentType: 'application/json' });
+    }
+
     renderShippingZones();
     populateDeliverySelectOptions();
     renderBestSellers();
     applyFilters();
     showToastNotification("Catálogo y envíos restablecidos.");
+  }
+}
+
+async function loadShippingFromSupabase() {
+  try {
+    const { data } = supabaseClient.storage.from('productos_img').getPublicUrl('shipping.json');
+    if (data && data.publicUrl) {
+      const response = await fetch(data.publicUrl + '?t=' + Date.now());
+      if (response.ok) {
+        const fetchedShipping = await response.json();
+        if (fetchedShipping) {
+          shippingRates = fetchedShipping;
+          localStorage.setItem("rosita_shipping_v2", JSON.stringify(shippingRates));
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar envíos desde Supabase:", error);
   }
 }
 
